@@ -1,32 +1,38 @@
-# _Sample project_
+# HR Predictor
 
-(See the README.md file in the upper level 'examples' directory for more information about examples.)
+### Requirements
+It's highly recommended to install ESP-IDF VSCode extension. Follow the [official documentation](https://docs.espressif.com/projects/vscode-esp-idf-extension/en/latest/installation.html) instructions. It's also recommended to install `Microsoft C/C++ extension pack`.
 
-This is the simplest buildable example. The example is used by command `idf.py create-project`
-that copies the project to user specified path and set it's name. For more information follow the [docs page](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/build-system.html#start-a-new-project)
+### Usage
+Firstly clone the repository and open VSCode within workspace directory. Then, open the command pallete and select:
+```
+> ESP-IDF: Add VS Code Configuration Folder
+```
+It resolves the compiler's path and syntax highlighting.
 
+So, connect your device and:
+```
+> ESP-IDF: Select Port to Use 
+```
 
+Now you must select the device target:
+```
+> ESP-IDF: Set Espressif Device Target
+```
+ In this case the project is designed for ESP32S3, and OpenOCD Board Configuration uses `builtin USB-JTAG`.
 
-## How to use example
-We encourage the users to use the example as a template for the new projects.
-A recommended way is to follow the instructions on a [docs page](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/build-system.html#start-a-new-project).
-
-## Example folder contents
-
-The project **sample_project** contains one source file in C language [main.c](main/main.c). The file is located in folder [main](main).
-
-ESP-IDF projects are built using CMake. The project build configuration is contained in `CMakeLists.txt`
-files that provide set of directives and instructions describing the project's source files and targets
-(executable, library, or both). 
-
-Below is short explanation of remaining files in the project folder.
+At this point, the project is almost ready to run and you just have to build, flash and monitor selecting the following commands:
 
 ```
-├── CMakeLists.txt
-├── main
-│   ├── CMakeLists.txt
-│   └── main.c
-└── README.md                  This is the file you are currently reading
+> ESP-IDF: Build Your Project
 ```
-Additionally, the sample project contains Makefile and component.mk files, used for the legacy Make based build system. 
-They are not used or needed when building with CMake and idf.py.
+
+```
+> ESP-IDF: Flash Your Project 
+```
+Select flash method. In this project I'm using `UART`.
+
+```
+> ESP-IDF: Monitor Device
+```
+This command opens a Serial Monitor in the VSCode terminal. Use it only if UART0 is not being used for serial communication with another device.
