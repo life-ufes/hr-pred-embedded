@@ -6,9 +6,9 @@
 
 
 // Filas globais
-extern QueueHandle_t queue_raw_data;
-extern QueueHandle_t queue_filtered_data;
-extern QueueHandle_t queue_inference_result;
+// extern QueueHandle_t queue_raw_data;
+// extern QueueHandle_t queue_filtered_data;
+// extern QueueHandle_t queue_inference_result;
 
 // Declarações das tasks
 void task_receive(void *params);

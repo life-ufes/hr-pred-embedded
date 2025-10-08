@@ -6,4 +6,5 @@ idf_component_register(
          "tasks/task_send.c"
     
     INCLUDE_DIRS "tasks"
+    REQUIRES comm sigproc
 )
