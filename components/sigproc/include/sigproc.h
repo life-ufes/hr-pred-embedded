@@ -19,7 +19,3 @@ typedef struct ewma_t {
 
 float ewma_update(ewma_t * const filter, const float input);
 
-
-// FIR
-void generate_bandpass_FIR_coefficients(float *fir_coeffs, const unsigned int fir_len, const float ft1, const float ft2);
-
