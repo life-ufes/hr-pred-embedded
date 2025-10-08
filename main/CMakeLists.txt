@@ -4,6 +4,7 @@ idf_component_register(
          "tasks/task_preprocess.c"
          "tasks/task_inference.c"
          "tasks/task_send.c"
+         "tasks/tasks.c"
     
     INCLUDE_DIRS "tasks"
     REQUIRES comm sigproc
