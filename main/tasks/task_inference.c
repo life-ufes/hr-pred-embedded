@@ -1,17 +1,33 @@
 #include "tasks.h"
+#include <stdbool.h>
+
+// Just for tests
+#define AGE        26
+#define WEIGHT     78.0f      // kg
+#define HEIGHT     1.80f      // m
+#define MALE       true
+#define FEMALE     (!MALE)
+
+#define BMI        (WEIGHT / (HEIGHT * HEIGHT))
+
 
 void task_inference(void *params){
-    
-    float * buffer = NULL;
+
+    // float * buffer = NULL;
+    buffer_t * bf = NULL;
+
+
     while(1) {
-        xQueueReceive(filtered_data_queue, &buffer, portMAX_DELAY);
+        xQueueReceive(filtered_data_queue, &bf, portMAX_DELAY);
 
-        printf("FILTERED DATA: \n");
-        for(int x=0; x<SIGNAL_LEN; x++) {
-            printf("%f ", buffer[x]);
-        }
-        printf("\n");
+        // printf("FILTERED DATA: \n");
+        // for(int x=0; x<SIGNAL_LEN; x++) {
+            // printf("%f ", buffer[x]);
+        // }
+        // printf("\n");
 
-        xQueueSend(buffer_pool_queue, &buffer, portMAX_DELAY);
+        printf("INFERENCE - Activity Level = %f\n", bf->al);
+
+        xQueueSend(buffer_pool_queue, &bf, portMAX_DELAY);
     }
 }
