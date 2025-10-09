@@ -28,7 +28,8 @@ void init_pipeline(void) {
     // }
 
     for(int x=0; x<NUM_BUFFERS; x++) {
-        xQueueSend(buffer_pool_queue, &buffer_p[x], portMAX_DELAY);
+        buffer_t * bf_ptr = &buffer_p[x];
+        xQueueSend(buffer_pool_queue, &bf_ptr, portMAX_DELAY);
     }
 }
 
