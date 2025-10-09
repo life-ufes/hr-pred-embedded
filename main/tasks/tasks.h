@@ -20,12 +20,9 @@ extern QueueHandle_t filtered_data_queue;
 extern QueueHandle_t inference_result_queue;
 
 
-// float buffers
-extern float buffer_pool[NUM_BUFFERS][SIGNAL_LEN];
-
 // union buffers
 typedef union {
-    float acc[SIGNAL_LEN * 3];
+    float acc[3][SIGNAL_LEN];
     float al;
     int hr;
 } buffer_t;
