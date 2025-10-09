@@ -19,7 +19,7 @@ void task_preprocess(void *params)
     fir_f32_t fir_x, fir_y, fir_z;
     buffer_t *buffer = NULL;
     float agg_signal[SIGNAL_LEN] = {0};
-
+    
     // Initialize fir filter
     ESP_ERROR_CHECK(dsps_fir_init_f32(&fir_x, fir_coeffs, delay_line, COEFFS_LEN));
     ESP_ERROR_CHECK(dsps_fir_init_f32(&fir_y, fir_coeffs, delay_line, COEFFS_LEN));
