@@ -1,5 +1,6 @@
 #include "tasks.h"
 #include "esp_dsp.h"
+#include "sigproc.h"
 
 // Using 3 coeffs only. The 4th is used to memory alignment.
 #define COEFFS_LEN 4

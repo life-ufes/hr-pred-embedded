@@ -7,7 +7,7 @@
 #include "freertos/queue.h"
 #include "esp_log.h"
 #include "esp_err.h"
-#include "sigproc.h"
+
 
 #define SIGNAL_LEN 25
 #define NUM_BUFFERS 4
