@@ -24,7 +24,7 @@ void init_pipeline(void) {
 void print_buffer(float *buffer)
 {
     printf("BUFFER: ");
-    for(int x=0; x<SIGNAL_LEN; x++){
+    for(int x=0; x<WINDOW_LEN; x++){
         printf("%f ", buffer[x]);
     }
     printf("\n");

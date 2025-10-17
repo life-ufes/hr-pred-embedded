@@ -15,11 +15,11 @@ void task_preprocess(void *params)
 {
     static __attribute__((aligned(16))) float fir_coeffs[COEFFS_LEN] = {0.05637224f, 0.9087878f, 0.05637224f, 0.0f};
     static __attribute__((aligned(16))) float delay_line[COEFFS_LEN + 4];
-    static __attribute__((aligned(16))) float temp_input[3][SIGNAL_LEN] = {{0}, {0}, {0}};
+    static __attribute__((aligned(16))) float temp_input[3][WINDOW_LEN] = {{0}, {0}, {0}};
 
     fir_f32_t fir_x, fir_y, fir_z;
     buffer_t *buffer = NULL;
-    float agg_signal[SIGNAL_LEN] = {0};
+    float agg_signal[WINDOW_LEN] = {0};
     
     // Initialize fir filter
     ESP_ERROR_CHECK(dsps_fir_init_f32(&fir_x, fir_coeffs, delay_line, COEFFS_LEN));
@@ -37,19 +37,19 @@ void task_preprocess(void *params)
         // Auxiliar input buffer
         for (int i = 0; i < 3; i++)
         {
-            memcpy(temp_input[i], buffer->acc[i], SIGNAL_LEN * sizeof(float));
+            memcpy(temp_input[i], buffer->acc[i], WINDOW_LEN * sizeof(float));
         }
 
         // Filtering
-        dsps_fir_f32_aes3(&fir_x, temp_input[0], buffer->acc[0], SIGNAL_LEN);
-        dsps_fir_f32_aes3(&fir_y, temp_input[1], buffer->acc[1], SIGNAL_LEN);
-        dsps_fir_f32_aes3(&fir_z, temp_input[2], buffer->acc[2], SIGNAL_LEN);
+        dsps_fir_f32_aes3(&fir_x, temp_input[0], buffer->acc[0], WINDOW_LEN);
+        dsps_fir_f32_aes3(&fir_y, temp_input[1], buffer->acc[1], WINDOW_LEN);
+        dsps_fir_f32_aes3(&fir_z, temp_input[2], buffer->acc[2], WINDOW_LEN);
 
         // Aggregating
-        aggregate_acc_window(buffer->acc[0], buffer->acc[1], buffer->acc[2], agg_signal, SIGNAL_LEN);
+        aggregate_acc_window(buffer->acc[0], buffer->acc[1], buffer->acc[2], agg_signal, WINDOW_LEN);
 
         // EWMA
-        buffer->al = activity_level(agg_signal, SIGNAL_LEN);
+        buffer->al = activity_level(agg_signal, WINDOW_LEN);
 
         // Send data to the next stage
         xQueueSend(filtered_data_queue, &buffer, portMAX_DELAY);

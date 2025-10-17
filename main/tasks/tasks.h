@@ -8,10 +8,9 @@
 #include "esp_log.h"
 #include "esp_err.h"
 
-
-#define SIGNAL_LEN 25
 #define NUM_BUFFERS 4
-
+#define WINDOW_LEN 25
+#define SERIAL_SIGNAL_LEN WINDOW_LEN * 3
 
 // Global queues
 extern QueueHandle_t buffer_pool_queue;
@@ -22,7 +21,7 @@ extern QueueHandle_t inference_result_queue;
 
 // union buffers
 typedef union {
-    float acc[3][SIGNAL_LEN];
+    float acc[3][WINDOW_LEN];
     float al;
     int hr;
 } buffer_t;

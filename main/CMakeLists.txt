@@ -7,5 +7,5 @@ idf_component_register(
          "tasks/tasks.c"
     
     INCLUDE_DIRS "tasks"
-    REQUIRES comm sigproc exp_approx_model
+    REQUIRES comm sigproc exp_approx_model driver
 )

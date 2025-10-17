@@ -22,7 +22,7 @@ void ea_model_init(eam_t *model)
         INITIAL_WEIGHT_5
     };
 
-    memcpy(model->weights, weights, WEIGHTS_LEN);
+    memcpy(model->weights, weights, WEIGHTS_LEN * sizeof(float));
 
     model->b_low = 80.0f;
     model->b_high = 120.0f;
@@ -34,7 +34,7 @@ void ea_model_init(eam_t *model)
     model->next_hr = 100.0f;
 
     float ds[WEIGHTS_LEN] = {1.0f, 0.0f, 0.0f, 0.0f, 0.0f};
-    memcpy(model->ds, ds, WEIGHTS_LEN);
+    memcpy(model->ds, ds, WEIGHTS_LEN * sizeof(float));
 }
 
 
@@ -63,7 +63,7 @@ void update_weights(eam_t *model)
     ESP_ERROR_CHECK(dsps_mulc_f32_ae32(res_op2, res_op3, WEIGHTS_LEN, model->alpha, 1, 1));
     ESP_ERROR_CHECK(dsps_sub_f32_ae32(model->weights, res_op3, res_final, WEIGHTS_LEN, 1, 1, 1));
 
-    memcpy(model->weights, res_final, WEIGHTS_LEN);
+    memcpy(model->weights, res_final, WEIGHTS_LEN * sizeof(float));
 }
 
 
@@ -93,13 +93,13 @@ void uptadte_bias(eam_t *model)
 
 void ea_model_partial_fit(eam_t *model, float al)
 {
+    // update AL
+    model->ds[0] = al;
+    
     // Do not change order
     update_tau(model);
     update_weights(model);
     uptadte_bias(model);
-
-    // update AL
-    model->ds[0] = al;
 
     float dot_prod = 0;
     dsps_dotprod_f32_aes3(model->ds, model->weights, &dot_prod, 5);
