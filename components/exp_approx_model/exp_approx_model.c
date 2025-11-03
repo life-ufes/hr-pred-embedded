@@ -53,6 +53,7 @@ void ea_model_handle_intensity(eam_t *model)
 }
 
 
+// TODO: Review (low variability)
 void update_weights(eam_t *model)
 {
     float mul_factor = expf(-1.0f/model->tau);
@@ -66,7 +67,7 @@ void update_weights(eam_t *model)
     memcpy(model->weights, res_final, WEIGHTS_LEN * sizeof(float));
 }
 
-
+// TODO: refactor (values coming to infinity)
 void update_tau(eam_t *model)
 {
     float factor1 = model->tau - (model->alpha *(-expf(-1/model->tau)/powf(model->tau, 2)));
@@ -112,4 +113,25 @@ void ea_model_partial_fit(eam_t *model, float al)
 void ea_model_predict(eam_t *model)
 {
     model->next_hr = roundf(model->hr_reg - ((model->hr_reg - model->next_hr) * expf(-1.0f/model->tau)));
+}
+
+
+void ea_model_debug(eam_t *model)
+{
+    printf("\n\n--- EA MODEL DEBUG ---\n");
+    printf("AL: %.2f\n", model->ds[0]);
+    printf("Weights: %.2f, %.2f, %.2f, %.2f, %.2f\n", 
+        model->weights[0], 
+        model->weights[1],
+        model->weights[2],
+        model->weights[3],
+        model->weights[4]
+    );
+    printf("HR reg.: %.2f\n", model->hr_reg);
+    printf("Next HR: %.2f\n", model->next_hr);
+    printf("Tau: %.2f\n", model->tau);
+    printf("Next Tau: %.2f\n", model->next_tau);
+    printf("b_high: %.2f\n", model->b_high);
+    printf("b_low: %.2f\n", model->b_low);
+    printf("\n\n");
 }

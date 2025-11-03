@@ -24,6 +24,8 @@ void task_inference(void *params){
 
         bf->hr = (int)model.next_hr;
 
+        ea_model_debug(&model);
+
         xQueueSend(inference_result_queue, &bf, portMAX_DELAY);
     }
 }

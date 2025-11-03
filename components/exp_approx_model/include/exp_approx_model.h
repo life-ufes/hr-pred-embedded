@@ -36,3 +36,5 @@ void ea_model_handle_intensity(eam_t *model);
 void ea_model_partial_fit(eam_t *model, float al);
 
 void ea_model_predict(eam_t *model);
+
+void ea_model_debug(eam_t *model);
