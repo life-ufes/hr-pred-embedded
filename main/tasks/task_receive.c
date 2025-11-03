@@ -7,8 +7,6 @@ static const char * TAG = "INPUT_TASK";
 
 void task_receive(void *params)
 {
-    buffer_t *buffer;
-
     const int uart_baud_rate = 115200;
     const int uart_buffer_size = 1024;
     const int intr_alloc_flags = 0;
@@ -30,6 +28,7 @@ void task_receive(void *params)
     float signal_serial_window[SERIAL_SIGNAL_LEN];
     uint8_t temp_buff[TEMP_BUFF_SIZE];
     size_t bytes_in_buff = 0;
+    buffer_t *buffer = NULL;
 
     while (1)
     {
@@ -40,12 +39,13 @@ void task_receive(void *params)
             uart_read_bytes(uart_port_num, temp_buff, (SERIAL_SIGNAL_LEN * sizeof(float)), pdMS_TO_TICKS(0));
             memcpy(signal_serial_window, temp_buff, SERIAL_SIGNAL_LEN * sizeof(float));
 
-            xQueueReceive(buffer_pool_queue, &buffer, portMAX_DELAY); // Catching an available buffer
+            // Catching an available buffer
+            xQueueReceive(buffer_pool_queue, &buffer, portMAX_DELAY); 
             
-            // Verfy buffer
+            // Verify buffer
             if (!buffer)
             {
-                ESP_LOGW("receive_buffer", "NULL buffer");
+                ESP_LOGE("receive_buffer", "NULL buffer");
                 continue;
             }
 
