@@ -1,34 +1,49 @@
+from test_data.fake_data import fake_signal_gen
 import threading
 import argparse
+import struct
 import serial
 import time
 import sys
 
+
 # Args parser
 parser = argparse.ArgumentParser(prog="test.py")
-parser.add_argument('-b', '--baud-rate', type=int, required=True, help='The baud rate of serial communication')
 parser.add_argument('-p', '--port', type=str, required=True, help='The port of serial communication')
+parser.add_argument('-b', '--baud-rate', type=int, required=True, help='The baud rate of serial communication')
 args = parser.parse_args()
 
+# Global
 running = True
 
 # Write data routine
 def serial_write(ser):
     global running
-    while running:
-        time.sleep(0.25)
-        print("write\n")
-        pass
 
+    while running:
+        time.sleep(1)
+        
+        data = fake_signal_gen()
+        bin_packet = struct.pack("<75f", *data) # float32 | little endian
+        
+        try:
+            ser.write(bin_packet)
+        except serial.SerialException as e:
+            print(f"Serial write error: {e}")
+            break
 
 # Read data routine
 def serial_read(ser):
     global running
     while running:
         time.sleep(0.5)
-        print("read\n")
-        pass
-
+        try:
+            message = ser.readline().decode("utf-8", errors="ignore").strip()
+            if message:
+                print(f"Python serial read: {message}")
+        except serial.SerialException as e:
+            print(f"Serial read error: {e}")
+            break
 
 # Starting threads
 def main():
