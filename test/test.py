@@ -36,7 +36,7 @@ def serial_write(ser):
 def serial_read(ser):
     global running
     while running:
-        time.sleep(0.5)
+        time.sleep(0.05)
         try:
             message = ser.readline().decode("utf-8", errors="ignore").strip()
             if message:
