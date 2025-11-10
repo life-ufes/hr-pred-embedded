@@ -43,7 +43,7 @@ void ea_model_set_user_data(eam_t *model, float bmi, Genre g, int age)
     model->ds[1] = bmi;
     model->ds[2] = (float)age;
     model->ds[3] = g == MALE ? 1.0f : 0.0f;
-    model->ds[4] = g == FEMALE ? 1.0 : 0.0f; 
+    model->ds[4] = g == FEMALE ? 1.0f : 0.0f; 
 }
 
 
@@ -67,22 +67,23 @@ void update_weights(eam_t *model)
     memcpy(model->weights, res_final, WEIGHTS_LEN * sizeof(float));
 }
 
-// TODO: refactor (values coming to infinity)
+
 void update_tau(eam_t *model)
 {
-    float factor1 = model->tau - (model->alpha *(-expf(-1/model->tau)/powf(model->tau, 2)));
-    
     float dot_prod = 0; 
-    dsps_dotprod_f32_aes3(model->ds, model->weights, &dot_prod, WEIGHTS_LEN);
+    ESP_ERROR_CHECK(dsps_dotprod_f32_aes3(model->ds, model->weights, &dot_prod, WEIGHTS_LEN));
     
-    float factor2 = dot_prod - model->next_hr;
+    float error_term = dot_prod - model->next_hr;
+    float derivative_term = -expf(-1.0f / model->tau) / powf(model->tau, 2);
+    float next_tau_calc = model->tau - (model->alpha * derivative_term * error_term);
 
+    // Update state
     model->tau = model->next_tau;
-    model->next_tau = factor1 * factor2;
+    model->next_tau = next_tau_calc;
 }
 
 
-void uptadte_bias(eam_t *model)
+void update_bias(eam_t *model)
 {
     if(model->intensity == HIGH){
         model->b_high = model->b_high - (model->alpha * (expf(-1/model->tau) - 1));
@@ -97,13 +98,15 @@ void ea_model_partial_fit(eam_t *model, float al)
     // update AL
     model->ds[0] = al;
     
+    ea_model_handle_intensity(model);
+
     // Do not change order
     update_tau(model);
     update_weights(model);
-    uptadte_bias(model);
+    update_bias(model);
 
     float dot_prod = 0;
-    dsps_dotprod_f32_aes3(model->ds, model->weights, &dot_prod, 5);
+    ESP_ERROR_CHECK(dsps_dotprod_f32_aes3(model->ds, model->weights, &dot_prod, WEIGHTS_LEN));
 
     float bias = model->intensity == HIGH ? model->b_high : model->b_low;
     model->hr_reg = dot_prod + bias;
@@ -112,7 +115,7 @@ void ea_model_partial_fit(eam_t *model, float al)
 
 void ea_model_predict(eam_t *model)
 {
-    model->next_hr = roundf(model->hr_reg - ((model->hr_reg - model->next_hr) * expf(-1.0f/model->tau)));
+    model->next_hr = roundf(model->hr_reg - ((model->hr_reg - model->next_hr) * expf(-1.0f/model->next_tau)));
 }
 
 
