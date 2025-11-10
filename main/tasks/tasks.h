@@ -8,9 +8,9 @@
 #include "esp_log.h"
 #include "esp_err.h"
 
-#define SIGNAL_LEN 25
 #define NUM_BUFFERS 4
-
+#define WINDOW_LEN 25
+#define SERIAL_SIGNAL_LEN WINDOW_LEN * 3
 
 // Global queues
 extern QueueHandle_t buffer_pool_queue;
@@ -18,8 +18,16 @@ extern QueueHandle_t raw_data_queue;
 extern QueueHandle_t filtered_data_queue;
 extern QueueHandle_t inference_result_queue;
 
-// Buffers
-extern float buffer_pool[NUM_BUFFERS][SIGNAL_LEN];
+
+// union buffers
+typedef union {
+    float acc[3][WINDOW_LEN];
+    float al;
+    int hr;
+} buffer_t;
+
+extern buffer_t buffer_p[NUM_BUFFERS];
+
 
 // Tasks declarations
 void task_receive(void *params);
@@ -28,3 +36,7 @@ void task_inference(void *params);
 void task_send(void *params);
 
 void init_pipeline(void);
+
+
+// Utils
+void print_buffer(float * buffer);
