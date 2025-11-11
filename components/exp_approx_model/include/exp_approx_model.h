@@ -33,7 +33,7 @@ void ea_model_set_user_data(eam_t *model, float bmi, Genre g, int age);
 
 void ea_model_handle_intensity(eam_t *model);
 
-void ea_model_partial_fit(eam_t *model, float al);
+void ea_model_partial_fit(eam_t *model, float al, float hr_gt);
 
 void ea_model_predict(eam_t *model);
 
