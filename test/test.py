@@ -1,4 +1,4 @@
-from test_data.fake_data import fake_signal_gen
+from test_data.utils import get_acc_data_from_csv, acc_data_chunker
 import threading
 import argparse
 import struct
@@ -6,24 +6,20 @@ import serial
 import time
 import sys
 
-
-# Args parser
-parser = argparse.ArgumentParser(prog="test.py")
-parser.add_argument('-p', '--port', type=str, required=True, help='The port of serial communication')
-parser.add_argument('-b', '--baud-rate', type=int, required=True, help='The baud rate of serial communication')
-args = parser.parse_args()
-
 # Global
 running = True
 
+
 # Write data routine
-def serial_write(ser):
+def serial_write(ser: serial.Serial, data_generator) -> None:
     global running
 
-    while running:
+    for data in data_generator:
+        if not running:
+            break
+
         time.sleep(1)
-        
-        data = fake_signal_gen()
+        # print(data[0])
         bin_packet = struct.pack("<75f", *data) # float32 | little endian
         
         try:
@@ -31,9 +27,13 @@ def serial_write(ser):
         except serial.SerialException as e:
             print(f"Serial write error: {e}")
             break
+    
+    print("\nData transmission from file complete. Shutting down global flag.")
+    running = False
+
 
 # Read data routine
-def serial_read(ser):
+def serial_read(ser: serial.Serial) -> None:
     global running
     while running:
         time.sleep(0.05)
@@ -45,13 +45,23 @@ def serial_read(ser):
             print(f"Serial read error: {e}")
             break
 
+
 # Starting threads
-def main():
+def main(args):
     global running
+    CHUNK_SIZE = 25
+
+    print("--- Data Preparation ---")
+    
+    df_acc = get_acc_data_from_csv(args.file)
+    data_gen = acc_data_chunker(df_acc, CHUNK_SIZE) 
+    
+    print("Generator created. Starting serial routine...")
+    print("------------------------\n\n")
 
     try:
         with serial.Serial(port=args.port, baudrate=args.baud_rate, timeout=1) as ser:
-            write_thread = threading.Thread(target=serial_write, name="write_thread", args=(ser,))
+            write_thread = threading.Thread(target=serial_write, name="write_thread", args=(ser, data_gen))
             read_thread = threading.Thread(target=serial_read, name="read_thread", args=(ser,))
 
             write_thread.start()
@@ -73,5 +83,13 @@ def main():
         print(f"Serial access error: {err}")
         sys.exit(1)
 
+
+# Entrypoint
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser(prog="test.py")
+    parser.add_argument('-f', '--file', type=str, required=True, help='Data file name')
+    parser.add_argument('-p', '--port', type=str, required=True, help='The port of serial communication')
+    parser.add_argument('-b', '--baud-rate', type=int, required=True, help='The baud rate of serial communication')
+    
+    args = parser.parse_args()    
+    main(args)
