@@ -19,11 +19,11 @@ def serial_write(ser: serial.Serial, data_generator) -> None:
             break
 
         time.sleep(1)
-        # print(data[0])
-        bin_packet = struct.pack("<75f", *data) # float32 | little endian
+        bin_packet = struct.pack("<76f", *data) # float32 | little endian
         
         try:
             ser.write(bin_packet)
+            # print(f"Python serial write: HR sent = {data[-1]}")
         except serial.SerialException as e:
             print(f"Serial write error: {e}")
             break

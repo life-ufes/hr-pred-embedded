@@ -38,7 +38,9 @@ def acc_data_chunker(df: pd.DataFrame, chunk_size: int):
             break
         
         # Flatten cols
-        acc_data = chunk[["acc_x", "acc_y", "acc_z"]].values.flatten().tolist()
-        
+        acc_data = chunk[["acc_x", "acc_y", "acc_z"]].values.flatten().tolist()      
+        hr = chunk["hr"].iloc[-1]
+        acc_data.append(float(hr))
+
         # Return list and save state
         yield acc_data

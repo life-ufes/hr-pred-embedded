@@ -20,10 +20,14 @@ extern QueueHandle_t inference_result_queue;
 
 
 // union buffers
-typedef union {
-    float acc[3][WINDOW_LEN];
-    float al;
-    int hr;
+typedef struct {
+    float hr_gt;
+    
+    union {
+        float acc[3][WINDOW_LEN];
+        float al;
+        int hr;
+    };
 } buffer_t;
 
 extern buffer_t buffer_p[NUM_BUFFERS];
