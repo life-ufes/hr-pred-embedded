@@ -5,9 +5,24 @@ import struct
 import serial
 import time
 import sys
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
 
 # Global
 running = True
+
+# Chart data
+predicted_values = []
+ground_truth_values = []
+
+# Plot setup (global figure)
+fig, ax = plt.subplots()
+ax.set_title("Heart Rate: Prediction vs Ground Truth")
+ax.set_xlabel("Sample")
+ax.set_ylabel("BPM")
+line_pred, = ax.plot([], [], label="Predicted")
+line_gt, = ax.plot([], [], label="Ground Truth")
+ax.legend()
 
 
 # Write data routine
@@ -19,6 +34,11 @@ def serial_write(ser: serial.Serial, data_generator) -> None:
             break
 
         time.sleep(1)
+
+        ground_truth = data[-1]
+        ground_truth_values.append(ground_truth)
+        print("GT:", ground_truth)
+
         bin_packet = struct.pack("<76f", *data) # float32 | little endian
         
         try:
@@ -37,16 +57,41 @@ def serial_read(ser: serial.Serial) -> None:
     global running
     while running:
         time.sleep(0.05)
+        # try:
+        #     message = ser.readline().decode("utf-8", errors="ignore").strip()
+        #     if message:
+        #         print(f"Python serial read: {message}")
+        # except serial.SerialException as e:
+        #     print(f"Serial read error: {e}")
+        #     break
         try:
-            message = ser.readline().decode("utf-8", errors="ignore").strip()
-            if message:
-                print(f"Python serial read: {message}")
+            data = ser.read(4)  # lê 4 bytes (timeout de 1s vem do Serial())
+            if len(data) == 4:
+                hr = struct.unpack("<i", data)[0]   # int32 little endian
+                print("READ HR:", hr) 
+                predicted_values.append(hr)
+                print(f"Python serial read: {hr}")
+
         except serial.SerialException as e:
             print(f"Serial read error: {e}")
             break
 
 
-# Starting threads
+# ---------------------------------------------------------------------------
+# REAL-TIME GRAPH UPDATE
+# ---------------------------------------------------------------------------
+def update_plot(frame):
+    line_pred.set_data(range(len(predicted_values)), predicted_values)
+    line_gt.set_data(range(len(ground_truth_values)), ground_truth_values)
+
+    ax.relim()
+    ax.autoscale_view()
+    return line_pred, line_gt
+
+
+# ---------------------------------------------------------------------------
+# MAIN
+# ---------------------------------------------------------------------------
 def main(args):
     global running
     CHUNK_SIZE = 25
@@ -59,6 +104,8 @@ def main(args):
     print("Generator created. Starting serial routine...")
     print("------------------------\n\n")
 
+    ani = FuncAnimation(fig, update_plot, interval=200)
+
     try:
         with serial.Serial(port=args.port, baudrate=args.baud_rate, timeout=1) as ser:
             write_thread = threading.Thread(target=serial_write, name="write_thread", args=(ser, data_gen))
@@ -66,12 +113,18 @@ def main(args):
 
             write_thread.start()
             read_thread.start()
+            
+            plt.show()
+            print("Saving final plot to final_plot.png...")
+            fig.savefig("final_plot.png")
+            print("Saved.")
+            running = False
 
             write_thread.join()
             read_thread.join()
 
-            while True:
-                time.sleep(0.2)
+            # while True:
+            #     time.sleep(0.2)
 
     except KeyboardInterrupt:
         print("\nExiting program...")
