@@ -10,11 +10,13 @@
 #define FEMALE     (!MALE)
 #define BMI        (WEIGHT / (HEIGHT * HEIGHT))
 
-
 void app_main(void)
 {
-    init_pipeline();
+    init_uart();
+    uart_mutex = xSemaphoreCreateMutex();
 
+    init_pipeline();
+    
     xTaskCreate(task_receive, "receive_task", 4096, NULL, 5, NULL);
     xTaskCreate(task_preprocess, "preprocess_task", 2048, NULL, 5, NULL);
     xTaskCreate(task_inference, "inference_task", 4096, NULL, 5, NULL);

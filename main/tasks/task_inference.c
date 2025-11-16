@@ -17,14 +17,14 @@ void task_inference(void *params){
     while(1) {
         xQueueReceive(filtered_data_queue, &bf, portMAX_DELAY);
 
-        printf("INFERENCE TASK - Activity Level: %f\n HR Ground Truth: %f\n ", bf->al, bf->hr_gt);
+        // printf("INFERENCE TASK - Activity Level: %f\n HR Ground Truth: %f\n ", bf->al, bf->hr_gt);
 
         ea_model_partial_fit(&model, bf->al, bf->hr_gt);
         ea_model_predict(&model);
 
         bf->hr = (int)model.next_hr;
 
-        ea_model_debug(&model);
+        // ea_model_debug(&model);
 
         xQueueSend(inference_result_queue, &bf, portMAX_DELAY);
     }
