@@ -18,7 +18,7 @@ ground_truth_values = []
 # Plot setup (global figure)
 fig, ax = plt.subplots()
 ax.set_title("Heart Rate: Prediction vs Ground Truth")
-ax.set_xlabel("Sample")
+ax.set_xlabel("Seconds")
 ax.set_ylabel("BPM")
 line_pred, = ax.plot([], [], label="Predicted")
 line_gt, = ax.plot([], [], label="Ground Truth")
@@ -33,7 +33,7 @@ def serial_write(ser: serial.Serial, data_generator) -> None:
         if not running:
             break
 
-        time.sleep(1)
+        time.sleep(0.5)
 
         ground_truth = data[-1]
         ground_truth_values.append(ground_truth)
@@ -86,6 +86,7 @@ def update_plot(frame):
 
     ax.relim()
     ax.autoscale_view()
+
     return line_pred, line_gt
 
 
