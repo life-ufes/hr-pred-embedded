@@ -3,13 +3,18 @@
 #include "exp_approx_model.h"
 #include "esp_dsp.h"
 
-#define INITIAL_WEIGHT_1 77.19f
-#define INITIAL_WEIGHT_2 0.82f
-#define INITIAL_WEIGHT_3 -0.9f
-#define INITIAL_WEIGHT_4 -6.44f 
-#define INITIAL_WEIGHT_5 -0.09f
+#define INITIAL_WEIGHT_1    93.75f
+#define INITIAL_WEIGHT_2    0.82f
+#define INITIAL_WEIGHT_3    -0.9f
+#define INITIAL_WEIGHT_4    -6.44f 
+#define INITIAL_WEIGHT_5    -0.09f
 
-#define INTENSITY_TRESHOLD 1.25
+#define TAU                 30.0f
+#define B_HIGH              80.0f
+#define B_LOW               60.0f
+#define L_RATE              0.1f
+
+#define INTENSITY_TRESHOLD  1.5f
 
 
 void ea_model_init(eam_t *model)
@@ -24,14 +29,14 @@ void ea_model_init(eam_t *model)
 
     memcpy(model->weights, weights, WEIGHTS_LEN * sizeof(float));
 
-    model->b_low = 80.0f;
-    model->b_high = 120.0f;
-    model->tau = 75.0f;
-    model->next_tau = 75.0f;
-    model->alpha = 5.0f;
+    model->b_low = B_LOW;
+    model->b_high = B_HIGH;
+    model->tau = TAU;
+    model->next_tau = TAU;
+    model->alpha = L_RATE;
 
-    model->hr_reg = 100.0f;
-    model->next_hr = 100.0f;
+    model->hr_reg = 85.0f;
+    model->next_hr = 85.0f;
 
     float ds[WEIGHTS_LEN] = {1.0f, 0.0f, 0.0f, 0.0f, 0.0f};
     memcpy(model->ds, ds, WEIGHTS_LEN * sizeof(float));
@@ -79,14 +84,14 @@ void update_tau(eam_t *model, int deriv_signal)
     ESP_ERROR_CHECK(dsps_dotprod_f32_aes3(model->ds, model->weights, &dot_prod, WEIGHTS_LEN));
     
     float error_term = dot_prod - model->next_hr;
-    float derivative_term = -expf(-1.0f / model->tau) / powf(model->tau, 2);
+    float derivative_term = -expf(-1.0f / model->next_tau) / powf(model->next_tau, 2);
     float tau_update_term = (model->alpha * derivative_term * error_term);
 
     if(deriv_signal < 0) {
         tau_update_term *= -1;
     }
 
-    float next_tau_calc = model->tau - tau_update_term;
+    float next_tau_calc = model->next_tau - tau_update_term;
 
     // Update state
     model->tau = model->next_tau;

@@ -24,7 +24,7 @@ typedef struct exp_approx_model
     float b_low;
     float b_high;
     Intensity intensity;
-} eam_t;
+}__attribute__((aligned(16))) eam_t;
 
 
 void ea_model_init(eam_t *model);
