@@ -7,6 +7,7 @@
 #include "freertos/queue.h"
 #include "esp_log.h"
 #include "esp_err.h"
+#include "driver/uart.h"
 
 #define NUM_BUFFERS 4
 #define WINDOW_LEN 25
@@ -18,16 +19,20 @@ extern QueueHandle_t raw_data_queue;
 extern QueueHandle_t filtered_data_queue;
 extern QueueHandle_t inference_result_queue;
 
+extern SemaphoreHandle_t uart_mutex;
 
 // union buffers
-typedef union {
-    float acc[3][WINDOW_LEN];
-    float al;
-    int hr;
+typedef struct {
+    float hr_gt;
+    
+    union {
+        float acc[3][WINDOW_LEN];
+        float al;
+        float hr;
+    };
 } buffer_t;
 
 extern buffer_t buffer_p[NUM_BUFFERS];
-
 
 // Tasks declarations
 void task_receive(void *params);
@@ -36,6 +41,7 @@ void task_inference(void *params);
 void task_send(void *params);
 
 void init_pipeline(void);
+void init_uart(void);
 
 
 // Utils
