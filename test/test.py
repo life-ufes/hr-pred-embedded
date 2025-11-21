@@ -1,4 +1,4 @@
-from test_data.utils import get_acc_data_from_csv, acc_data_chunker
+from lib.utils import get_acc_data_from_csv, acc_data_chunker
 from matplotlib.animation import FuncAnimation
 import matplotlib.pyplot as plt
 from datetime import datetime
@@ -9,6 +9,7 @@ import struct
 import serial
 import time
 import sys
+import os
 
 # Global
 running = True
@@ -48,8 +49,7 @@ ax.legend()
 
 
 # CSV builder -----------------------
-def save_csv_with_pandas(timestamp):
-
+def save_csv_with_pandas(timestamp, path):
     arrays = [
         w0, w1, w2, w3, w4,
         b_low, b_high,
@@ -74,8 +74,8 @@ def save_csv_with_pandas(timestamp):
         "ground_truth": ground_truth_values[:min_len],
     })
 
-    df.to_csv(f"session_{timestamp}.csv", index=False)
-    print(f"Saved to session_{timestamp}.csv with {min_len} rows.")
+    df.to_csv(f"{path}/session_{timestamp}.csv", index=False)
+
 
 
 # Write data routine ----------------------------------------
@@ -83,21 +83,21 @@ def serial_write(ser: serial.Serial, data_generator) -> None:
     global running
 
     for data in data_generator:
-        if not running:
+        if not running or not ser.is_open:
             break
 
         time.sleep(0.5)
 
         ground_truth = data[-1]
         ground_truth_values.append(ground_truth)
-        print("GT:", ground_truth)
+        print("HR-GT:", ground_truth)
 
-        bin_packet = struct.pack("<76f", *data) # float32 | little endian
-        
         try:
+            bin_packet = struct.pack("<76f", *data) # 76 float32 (304B) | little endian
             ser.write(bin_packet)
+
         except serial.SerialException as e:
-            print(f"Serial write error: {e}")
+            print(f"Serial write loop ended (Port closed or error): {e}")
             break
     
     print("\nData transmission from file complete. Shutting down global flag.")
@@ -107,8 +107,13 @@ def serial_write(ser: serial.Serial, data_generator) -> None:
 # Read data routine ------------------------
 def serial_read(ser: serial.Serial) -> None:
     global running
+    
     while running:
         time.sleep(0.05)
+        
+        if not ser.is_open:
+            break
+
         try:
             message = ser.readline().decode("utf-8", errors="ignore").strip()
             if message:
@@ -127,8 +132,8 @@ def serial_read(ser: serial.Serial) -> None:
 
                 print(f"Python serial read: {message.split(",")}")
         
-        except serial.SerialException as e:
-            print(f"Serial read error: {e}")
+        except (serial.SerialException, OSError, TypeError)as e:
+            print(f"Serial read loop ended (Port closed or error): {e}")
             break
         # try:
         #     data = ser.read(4)  # lê 4 bytes (timeout de 1s vem do Serial())
@@ -171,57 +176,70 @@ def update_plot(frame):
 # ---------------------------------------------------------------------------
 def main(args):
     global running
-    CHUNK_SIZE = 25
+    CHUNK_SIZE = 25 # 25Hz
 
-    print("--- Data Preparation ---")
-    
+    print("Preparing data...")
     df_acc = get_acc_data_from_csv(args.file)
     data_gen = acc_data_chunker(df_acc, CHUNK_SIZE) 
     
-    print("Generator created. Starting serial routine...")
-    print("------------------------\n\n")
-
-    ani = FuncAnimation(fig, update_plot, interval=200)
-
     try:
         with serial.Serial(port=args.port, baudrate=args.baud_rate, timeout=1) as ser:
-            write_thread = threading.Thread(target=serial_write, name="write_thread", args=(ser, data_gen))
-            read_thread = threading.Thread(target=serial_read, name="read_thread", args=(ser,))
-
+            
+            print("Starting serial routine...")
+            
+            # Init threads
+            write_thread = threading.Thread(target=serial_write, name="write_thread", args=(ser, data_gen), daemon=True)
+            read_thread = threading.Thread(target=serial_read, name="read_thread", args=(ser,), daemon=True)
             write_thread.start()
             read_thread.start()
             
-            plt.show()
-
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            print("Saving final plot to final_plot.png...")
-            fig.savefig(f"final_plot_{timestamp}.png")
-            save_csv_with_pandas(timestamp)
-            running = False
-
-            write_thread.join()
-            read_thread.join()
-            
-            # Use it if it has no animation
-            # while True:
-            #     time.sleep(0.2)
+            # running animation
+            if args.realtime:
+                ani = FuncAnimation(fig, update_plot, interval=200)
+                plt.show()  
+            else:
+                while running:
+                    time.sleep(0.5)
 
     except KeyboardInterrupt:
-        print("\nExiting program...")
+        print("\nCTRL-C -> Exiting program...")
         running = False
-        time.sleep(0.5)
-        sys.exit(0)
 
     except serial.SerialException as err:
         print(f"Serial access error: {err}")
         sys.exit(1)
 
+    finally:
 
-# Entrypoint
+        # Saving results
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+        try:
+            if not os.path.exists(args.output):
+                os.mkdir(args.output)
+
+            print(f"Saving final plot and params to ./{args.output}...")
+
+            if args.realtime:
+                fig.savefig(f"{args.output}/plot_{timestamp}.png")
+            
+            save_csv_with_pandas(timestamp, args.output)
+
+        except Exception as err:
+            print(f"Could not save results: {err}")
+
+        print("Shutdown complete!")
+
+
+# ---------------------------------------------------------------------------
+# ENTRYPOINT
+# ---------------------------------------------------------------------------
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog="test.py")
     parser.add_argument('-f', '--file', type=str, required=True, help='Data file name')
+    parser.add_argument("-rt", "--realtime", action="store_true", help="Turns on real time chart")
     parser.add_argument('-p', '--port', type=str, required=True, help='The port of serial communication')
+    parser.add_argument('-o', '--output', type=str, required=False, default="output", help='The output path')
     parser.add_argument('-b', '--baud-rate', type=int, required=True, help='The baud rate of serial communication')
     
     args = parser.parse_args()    

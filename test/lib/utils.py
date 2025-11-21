@@ -1,7 +1,7 @@
 import random
 import pandas as pd
 
-
+# --------------------
 def fake_signal_gen():
     data = []
     for _ in range(25):
@@ -12,7 +12,7 @@ def fake_signal_gen():
         data.extend([ax, ay, az])
     return data
 
-
+# ---------------------------------------------------
 def get_acc_data_from_csv(path: str) -> pd.DataFrame: 
     desired_cols = ["acc_x", "acc_y", "acc_z", "timestamp", "hr", "timestamp_hr"]
     df = pd.read_csv(path, usecols=desired_cols)
@@ -24,6 +24,7 @@ def get_acc_data_from_csv(path: str) -> pd.DataFrame:
     return df
 
 
+# -----------------------------------------------------
 def acc_data_chunker(df: pd.DataFrame, chunk_size: int):
 
     num_rows = len(df)
