@@ -22,9 +22,9 @@ void task_inference(void *params){
         ea_model_partial_fit(&model, bf->al, bf->hr_gt);
         ea_model_predict(&model);
 
-        bf->hr = (int)model.next_hr;
+        bf->hr = model.next_hr;
 
-        // ea_model_debug(&model);
+        ea_model_debug(&model);
 
         xQueueSend(inference_result_queue, &bf, portMAX_DELAY);
     }

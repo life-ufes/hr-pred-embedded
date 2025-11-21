@@ -28,7 +28,7 @@ typedef struct {
     union {
         float acc[3][WINDOW_LEN];
         float al;
-        int hr;
+        float hr;
     };
 } buffer_t;
 
