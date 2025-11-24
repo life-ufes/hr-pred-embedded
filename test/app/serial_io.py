@@ -31,7 +31,7 @@ def serial_write(ser: serial.Serial, data_generator) -> None:
             print(f"Serial write loop ended!")
             break
     
-    print("\nData transmission from file complete. Shutting down the threads!")
+    print("\nData transmission from file complete!")
     app_globals.running = False
 
 
