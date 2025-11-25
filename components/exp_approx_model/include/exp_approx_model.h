@@ -37,4 +37,4 @@ void ea_model_partial_fit(eam_t *model, float al, float hr_gt);
 
 void ea_model_predict(eam_t *model);
 
-void ea_model_debug(eam_t *model);
+void ea_model_debug(eam_t *model, float hr_gt);
