@@ -6,10 +6,10 @@ from queue import Queue, Empty
 
 class SerialProvider:
     
-    def __init__(self, port: str, baud_rate: int, callback = None):
+    def __init__(self, port: str, baud_rate: int, on_rx_callback = None):
         self.port = port
         self.baud_rate = baud_rate
-        self.callback = callback
+        self.callback = on_rx_callback
 
         self.serial = None
 

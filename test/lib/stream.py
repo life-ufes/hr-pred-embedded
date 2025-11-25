@@ -4,9 +4,12 @@ import threading
 import pandas as pd
 from .serial import SerialProvider
 
+
 class DataStreamer:
-    def __init__(self, serial_provider: SerialProvider, csv_path: str, chunk_size: int=25, interval: float=0.5, debug=False):
-        self.serial = serial_provider
+    
+    # TODO: add desired cols
+    def __init__(self, csv_path: str, chunk_size: int=25, interval: float=0.5, on_data_ready_callback=None):
+    
         self.chunk_size = chunk_size
         self.csv_path = csv_path
         self.interval = interval
@@ -16,9 +19,8 @@ class DataStreamer:
 
         self.df = None
         self._load_and_prepare()
-        self.debug = debug
+        self.on_data_ready = on_data_ready_callback
 
-    # Helper ------------------
     def _load_and_prepare(self):        
         desired_cols = ["acc_x", "acc_y", "acc_z", "timestamp", "hr", "timestamp_hr"]
         df = pd.read_csv(self.csv_path, usecols=desired_cols)
@@ -30,7 +32,7 @@ class DataStreamer:
 
         self.df = df.reset_index(drop=True)
 
-    # Helper ------------------
+
     def _chunk_generator(self):        
         num_rows = len(self.df)
 
@@ -49,12 +51,14 @@ class DataStreamer:
 
             yield acc_data
 
+
     def start(self):
         print("[DataStreamer] Starting...")
         self.stop_event.clear()
 
         self.thread = threading.Thread(target=self._run, daemon=True, name="DataStreamer")
         self.thread.start()
+
 
     def stop(self):
         print("[DataStreamer] Stopping...")
@@ -71,19 +75,11 @@ class DataStreamer:
         print("[DataStreamer] Thread running. Beginning CSV streaming...")
 
         for packet in self._chunk_generator():
-
             if self.stop_event.is_set():
                 print("[DataStreamer] Thread exit requested.")
                 break
-            
-            if self.debug:
-                print(f"[TX - Ground Truth] {packet[-1]} BPM\n")
 
-            # payload = ",".join(map(str, packet)).encode("utf-8")
-            payload = struct.pack("<76f", *packet) 
-            self.serial.send(payload)
-
-            # Avoid ESP flooding
+            self.on_data_ready(packet)
             time.sleep(self.interval)
 
         print("[DataStreamer] Finished sending CSV.")

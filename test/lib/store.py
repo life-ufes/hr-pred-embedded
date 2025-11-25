@@ -7,12 +7,15 @@ class ModelMetricsBuffer:
     METRIC_KEYS = [
         "w0", "w1", "w2", "w3", "w4",
         "b_low", "b_high", "Al", "tau",
-        "hr_reg", "predicted_values"
-        # "ground_truth_values"
+        "hr_reg", "predicted_values",
+        "ground_truth_values"
     ]
 
-    def __init__(self):
+
+    def __init__(self, timestamp: str):
         self.buffer = { key: [] for key in self.METRIC_KEYS }
+        self.timestamp = timestamp
+
 
     def add_sample(self, sample: dict):
         for key, value in sample.items():
@@ -21,19 +24,21 @@ class ModelMetricsBuffer:
             else:
                 print(f"[WARN] Ignoring unknown metric: {key}")
 
+
     def to_csv(self, path):
         os.makedirs(path, exist_ok=True)
         df = pd.DataFrame(self.buffer)
 
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        csv = f"{path}/session_{timestamp}.csv"
+        csv = f"{path}/session_{self.timestamp}.csv"
         df.to_csv(csv, index=False)
         
         print(f"[OK] saved CSV: {csv}")
 
+
     def reset(self):
         for key in self.buffer:
             self.buffer[key] = []
+
 
     @classmethod
     def parse_sample(cls, sample: bytes) -> dict:                
