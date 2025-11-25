@@ -19,13 +19,15 @@ if __name__ == '__main__':
         baud_rate=args.baud_rate, 
         csv_path=args.file, 
         output_path=args.output,
-        real_time=args.realtime
+        real_time=args.realtime,
+        debug=args.debug
     )
 
     monitor.start()
 
     try:
-        while True:
-            time.sleep(1)
+        if not args.realtime:
+            while True:
+                time.sleep(1)
     except KeyboardInterrupt:
         monitor.stop()
