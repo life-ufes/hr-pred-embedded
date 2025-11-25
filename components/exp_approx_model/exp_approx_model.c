@@ -153,9 +153,9 @@ void ea_model_predict(eam_t *model)
 
 
 // ------------------------------
-void ea_model_debug(eam_t *model)
+void ea_model_debug(eam_t *model, float hr_gt)
 {
-    printf("%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",
+    printf("%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",
            model->weights[0],
            model->weights[1],
            model->weights[2],
@@ -166,5 +166,6 @@ void ea_model_debug(eam_t *model)
            model->ds[0], // AL
            model->next_tau,
            model->hr_reg,
-           model->next_hr);
+           model->next_hr,
+           hr_gt);
 }
