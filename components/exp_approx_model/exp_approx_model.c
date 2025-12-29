@@ -136,23 +136,23 @@ void ea_model_partial_fit(eam_t *model, float al, float hr_gt)
     update_tau(model, derivative_signal);
     update_weights(model, derivative_signal);
     update_bias(model, derivative_signal);
-
-    float dot_prod = 0;
-    ESP_ERROR_CHECK(dsps_dotprod_f32_aes3(model->ds, model->weights, &dot_prod, WEIGHTS_LEN));
-
-    float bias = model->intensity == HIGH ? model->b_high : model->b_low;
-    model->hr_reg = dot_prod + bias;
 }
 
 
-// -------------------------------
+// --------------------------------
 void ea_model_predict(eam_t *model)
 {
+    float dot_prod = 0;
+    ESP_ERROR_CHECK(dsps_dotprod_f32_aes3(model->ds, model->weights, &dot_prod, WEIGHTS_LEN));
+    
+    float bias = model->intensity == HIGH ? model->b_high : model->b_low;
+    model->hr_reg = dot_prod + bias;
+
     model->next_hr = (model->hr_reg - ((model->hr_reg - model->next_hr) * expf(-1.0f / model->next_tau)));
 }
 
 
-// ------------------------------
+// -------------------------------------------
 void ea_model_debug(eam_t *model, float hr_gt)
 {
     printf("%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",
