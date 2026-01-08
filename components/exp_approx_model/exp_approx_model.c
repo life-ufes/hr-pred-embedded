@@ -3,17 +3,28 @@
 #include "esp_dsp.h"
 #include "exp_approx_model.h"
 
+// acc
 #define INITIAL_WEIGHT_1 93.75f
+
+// gyro
+// #define INITIAL_WEIGHT_1 56.25f
+
 #define INITIAL_WEIGHT_2 0.82f
 #define INITIAL_WEIGHT_3 -0.90f
 #define INITIAL_WEIGHT_4 -6.44f
 #define INITIAL_WEIGHT_5 -0.09f
 
 #define TAU 56.25f
+
+// acc 
 #define B_HIGH 60.0f
 #define B_LOW 40.0f
-#define L_RATE 0.0092f
 
+// gyro
+// #define B_HIGH 80.0f
+// #define B_LOW 60.0f
+
+#define L_RATE 0.0092f
 #define INTENSITY_TRESHOLD 1.0f
 
 
@@ -125,11 +136,8 @@ void update_bias(eam_t *model, int deriv_signal)
 
 
 // -----------------------------------------------------------
-void ea_model_partial_fit(eam_t *model, float al, float hr_gt)
+void ea_model_partial_fit(eam_t *model, float hr_gt)
 {
-    model->ds[0] = al;
-    ea_model_handle_intensity(model);
-
     int derivative_signal = model->next_hr > hr_gt ? -1 : 1;
 
     // Do not change order
@@ -168,4 +176,11 @@ void ea_model_debug(eam_t *model, float hr_gt)
            model->hr_reg,
            model->next_hr,
            hr_gt);
+}
+
+
+// -----------------------------------------
+void ea_model_set_al(eam_t *model, float al)
+{
+    model->ds[0] = al;
 }

@@ -19,7 +19,13 @@ void task_inference(void *params){
 
         // printf("INFERENCE TASK - Activity Level: %f\n HR Ground Truth: %f\n ", bf->al, bf->hr_gt);
 
-        ea_model_partial_fit(&model, bf->al, bf->hr_gt);
+        ea_model_set_al(&model, bf->al);
+        ea_model_handle_intensity(&model);
+
+        if(bf->train){
+            ea_model_partial_fit(&model, bf->hr_gt);
+        }
+        
         ea_model_predict(&model);
 
         bf->hr = model.next_hr;

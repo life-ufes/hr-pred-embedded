@@ -24,6 +24,7 @@ extern SemaphoreHandle_t uart_mutex;
 // union buffers
 typedef struct {
     float hr_gt;
+    int train;
     
     union {
         float acc[3][WINDOW_LEN];

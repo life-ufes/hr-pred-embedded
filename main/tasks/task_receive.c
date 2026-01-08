@@ -2,18 +2,19 @@
 #include "driver/uart.h"
 
 #define TEMP_BUFF_SIZE 512
+#define PACKET_SIZE SERIAL_SIGNAL_LEN + 2
 
 static const char * TAG = "INPUT_TASK";
 
 void task_receive(void *params)
 {
     const int uart_port_num = UART_NUM_0;
-    float signal_serial_window[SERIAL_SIGNAL_LEN + 1];
+    float signal_serial_window[PACKET_SIZE];
     uint8_t temp_buff[TEMP_BUFF_SIZE];
     size_t bytes_in_buff = 0;
     buffer_t *buffer = NULL;
 
-    const size_t packet_size = (SERIAL_SIGNAL_LEN + 1) * sizeof(float);
+    const size_t packet_size = (PACKET_SIZE) * sizeof(float);
 
     while (1)
     {
@@ -36,6 +37,8 @@ void task_receive(void *params)
             
             // Fill buffer
             buffer->hr_gt = signal_serial_window[SERIAL_SIGNAL_LEN];
+            buffer->train = signal_serial_window[SERIAL_SIGNAL_LEN + 1];
+
             for (int i = 0; i < 3; i++)
             {
                 memcpy(buffer->acc[i], &signal_serial_window[i * 25], 25 * sizeof(float));
