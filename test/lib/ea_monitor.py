@@ -51,7 +51,7 @@ class EAModelMonitor:
         if self.debug:
             print(f"[TX - Ground Truth] {data[-1]} BPM\n")
             
-        payload = struct.pack("<76f", *data) 
+        payload = struct.pack("<77f", *data) 
         self.serial.send(payload)
         
 

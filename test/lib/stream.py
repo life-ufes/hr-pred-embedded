@@ -21,9 +21,10 @@ class DataStreamer:
         self._load_and_prepare()
         self.on_data_ready = on_data_ready_callback
 
+
     def _load_and_prepare(self):        
-        # desired_cols = ["acc_x", "acc_y", "acc_z", "timestamp", "hr", "timestamp_hr"]
-        desired_cols = ["gyro_x", "gyro_y", "gyro_z", "timestamp", "hr", "timestamp_hr"]
+        # desired_cols = ["acc_x", "acc_y", "acc_z", "timestamp", "hr", "timestamp_hr", "train"]
+        desired_cols = ["acc_x", "acc_y", "acc_z", "timestamp", "hr", "timestamp_hr", "train"]
 
         df = pd.read_csv(self.csv_path, usecols=desired_cols)
 
@@ -47,11 +48,13 @@ class DataStreamer:
                 break
 
             # acc_data = chunk[["acc_x", "acc_y", "acc_z"]].values.flatten().tolist()
-            acc_data = chunk[["gyro_x", "gyro_y", "gyro_z"]].values.flatten().tolist()
-
+            acc_data = chunk[["acc_x", "acc_y", "acc_z"]].values.flatten().tolist()
 
             hr_value = float(chunk["hr"].iloc[-1])
             acc_data.append(hr_value)
+
+            train_flag = int(chunk["train"].iloc[-1])
+            acc_data.append(train_flag)
 
             yield acc_data
 
