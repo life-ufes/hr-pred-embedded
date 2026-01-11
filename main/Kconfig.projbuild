@@ -17,33 +17,32 @@ menu "ML Model Configuration"
                 Uses the dual-tau exponential model.
     endchoice
 
-    choice EA_SENSOR_TYPE
-        prompt "Sensor Source for EA Model"
-        depends on EXPONENTIAL_APPROXIMATION_MODEL
-        default EA_SENSOR_ACC
+    choice SENSOR_TYPE
+        prompt "Sensor Source"
+        default SENSOR_ACC
         help
-            Choose which weight set will be loaded (Accelerometer or Gyroscope).
+            Choose which sensor data will be used (Accelerometer or Gyroscope).
 
-        config EA_SENSOR_ACC
+        config SENSOR_ACC
             bool "Accelerometer (Acc)"
         
-        config EA_SENSOR_GYRO
+        config SENSOR_GYRO
             bool "Gyroscope (Gyro)"
     endchoice   
 
-    choice DEM_SENSOR_TYPE
-        prompt "Dynamic Exponential Model: Sensor Source"
-        depends on DYNAMIC_EXPONENTIAL_MODEL
-        default DEM_SENSOR_ACC
-        help
-            Choose which weight set will be loaded (Accelerometer or Gyroscope).
+    # choice DEM_SENSOR_TYPE
+    #     prompt "Sensor Source for DE Model"
+    #     depends on DYNAMIC_EXPONENTIAL_MODEL
+    #     default DEM_SENSOR_ACC
+    #     help
+    #         Choose which weight set will be loaded (Accelerometer or Gyroscope).
 
-        config DEM_SENSOR_ACC
-            bool "Accelerometer (Acc)"
+    #     config DEM_SENSOR_ACC
+    #         bool "Accelerometer (Acc)"
             
-        config DEM_SENSOR_GYRO
-            bool "Gyroscope (Gyro)"
-    endchoice
+    #     config DEM_SENSOR_GYRO
+    #         bool "Gyroscope (Gyro)"
+    # endchoice
 
     # config ML_MODEL_VERSION
     #     string "Model Version String"

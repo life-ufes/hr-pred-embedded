@@ -2,23 +2,8 @@
 #include <stdio.h>
 #include "esp_dsp.h"
 #include "dynamic_exp_model.h"
+#include "dem_weights.h"
 
-// TODO: change weights based on pre config menu and pre-process directives
-#define INITIAL_WEIGHT_1 93.75f
-#define INITIAL_WEIGHT_2 0.82f
-#define INITIAL_WEIGHT_3 -0.90f
-#define INITIAL_WEIGHT_4 -6.44f
-#define INITIAL_WEIGHT_5 -0.09f
-#define INITIAL_WEIGHT_6 -0.09f
-
-#define TAU_RISE 56.25f
-#define TAU_DECAY 56.25f
-
-#define B_HIGH 60.0f
-#define B_LOW 40.0f
-
-#define L_RATE 0.0092f
-#define INTENSITY_TRESHOLD 1.0f
 
 // -----------------------------
 void de_model_init(dem_t *model)
@@ -61,7 +46,7 @@ void de_model_set_user_data(dem_t *model, float bmi, gender_dem_t g, int age)
 // -----------------------------------------
 void de_model_handle_intensity(dem_t *model)
 {
-	model->intensity = model->ds[0] >= INTENSITY_TRESHOLD ? HIGH : LOW;
+	model->intensity = model->ds[0] >= INTENSITY_THRESHOLD ? HIGH : LOW;
 }
 
 // -------------------------------------

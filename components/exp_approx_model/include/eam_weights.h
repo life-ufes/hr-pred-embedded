@@ -5,7 +5,7 @@
 // ==========================================
 // ACC
 // ==========================================
-#if defined(CONFIG_EA_SENSOR_ACC)
+#if defined(CONFIG_SENSOR_ACC)
 #define INITIAL_WEIGHT_1 93.75f
 #define B_HIGH 60.0f
 #define B_LOW 40.0f
@@ -13,7 +13,7 @@
 // ==========================================
 // GYRO
 // ==========================================
-#elif defined(CONFIG_EA_SENSOR_GYRO)
+#elif defined(CONFIG_SENSOR_GYRO)
 #define INITIAL_WEIGHT_1 56.25f
 #define B_HIGH 80.0f
 #define B_LOW 60.0f

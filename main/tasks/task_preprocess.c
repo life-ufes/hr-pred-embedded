@@ -7,6 +7,7 @@
 
 // Decl
 void task_preprocess(void *params);
+float slow_activity_level(float al);
 float activity_level(const float *const signal, int len);
 void aggregate_acc_window(const float *const w1, const float *const w2, const float *const w3, float *output, int len);
 
