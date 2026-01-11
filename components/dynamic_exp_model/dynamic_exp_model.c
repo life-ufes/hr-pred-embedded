@@ -180,9 +180,9 @@ void de_model_debug(dem_t *model, float hr_gt)
 }
 
 // ---------------------------------------------
-void de_model_set_als(dem_t *model, float al[3])
+void de_model_set_als(dem_t *model, float als[3])
 {
-	model->ds[0] = al[0];
-	model->ds[1] = al[1];
-	model->ds[2] = al[2];
+	model->ds[0] = als[0];
+	model->ds[1] = als[1];
+	model->ds[2] = als[2];
 }

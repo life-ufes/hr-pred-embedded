@@ -55,4 +55,4 @@ void de_model_predict(dem_t *model);
 
 void de_model_debug(dem_t *model, float hr_gt);
 
-void de_model_set_als(dem_t *model, float al[3]);
+void de_model_set_als(dem_t *model, float als[3]);

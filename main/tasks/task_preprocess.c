@@ -49,7 +49,15 @@ void task_preprocess(void *params)
         aggregate_acc_window(buffer->acc[0], buffer->acc[1], buffer->acc[2], agg_signal, WINDOW_LEN);
 
         // EWMA
-        buffer->al = activity_level(agg_signal, WINDOW_LEN);
+        float al = activity_level(agg_signal, WINDOW_LEN);
+        
+        #ifdef CONFIG_EXPONENTIAL_APPROXIMATION_MODEL
+            buffer->al = al;
+        #else
+            buffer->als[0] = al;
+            buffer->als[1] = al*al;
+            buffer->als[2] = slow_activity_level(al);
+        #endif
 
         // Send data to the next stage
         xQueueSend(filtered_data_queue, &buffer, portMAX_DELAY);
@@ -67,6 +75,23 @@ float activity_level(const float *const signal, int len)
     {
         ewma_update(&ewma_filter, signal[i]);
     }
+    return ewma_filter.last_value;
+}
+
+// avg AL / slow AL
+float slow_activity_level(float al)
+{
+    static ewma_t ewma_filter;
+    static int init_flag = 0;
+
+    if(!init_flag) {
+        ewma_filter.alpha = 0.05;
+        ewma_filter.last_value = al;
+        init_flag = 1;
+    }
+
+    ewma_update(&ewma_filter, al);
+
     return ewma_filter.last_value;
 }
 
