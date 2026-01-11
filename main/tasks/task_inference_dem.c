@@ -21,13 +21,13 @@ void task_inference_dem(void *params)
         de_model_handle_phase(&model);
 
         if(bf->train){
-            ea_model_partial_fit(&model, bf->hr_gt);
+            de_model_partial_fit(&model, bf->hr_gt);
         }
         
-        ea_model_predict(&model);
+        de_model_predict(&model);
         bf->hr = model.next_hr;
 
-        ea_model_debug(&model, bf->hr_gt);
+        de_model_debug(&model, bf->hr_gt);
 
         xQueueSend(inference_result_queue, &bf, portMAX_DELAY);
     }

@@ -1,4 +1,6 @@
+#include <math.h>
 #include <stdio.h>
+#include "esp_dsp.h"
 #include "dynamic_exp_model.h"
 
 // TODO: change weights based on pre config menu and pre-process directives
