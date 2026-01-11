@@ -2,30 +2,31 @@
 #include <stdio.h>
 #include "esp_dsp.h"
 #include "exp_approx_model.h"
+#include "eam_weights.h"
 
 // acc
-#define INITIAL_WEIGHT_1 93.75f
+// #define INITIAL_WEIGHT_1 93.75f
 
 // gyro
 // #define INITIAL_WEIGHT_1 56.25f
 
-#define INITIAL_WEIGHT_2 0.82f
-#define INITIAL_WEIGHT_3 -0.90f
-#define INITIAL_WEIGHT_4 -6.44f
-#define INITIAL_WEIGHT_5 -0.09f
+// #define INITIAL_WEIGHT_2 0.82f
+// #define INITIAL_WEIGHT_3 -0.90f
+// #define INITIAL_WEIGHT_4 -6.44f
+// #define INITIAL_WEIGHT_5 -0.09f
 
-#define TAU 56.25f
+// #define TAU 56.25f
 
 // acc 
-#define B_HIGH 60.0f
-#define B_LOW 40.0f
+// #define B_HIGH 60.0f
+// #define B_LOW 40.0f
 
 // gyro
 // #define B_HIGH 80.0f
 // #define B_LOW 60.0f
 
-#define L_RATE 0.0092f
-#define INTENSITY_TRESHOLD 1.0f
+// #define L_RATE 0.0092f
+// #define INTENSITY_TRESHOLD 1.0f
 
 
 // ----------------------------
@@ -67,7 +68,7 @@ void ea_model_set_user_data(eam_t *model, float bmi, Genre g, int age)
 // ----------------------------------------
 void ea_model_handle_intensity(eam_t *model)
 {
-    model->intensity = model->ds[0] >= INTENSITY_TRESHOLD ? HIGH : LOW;
+    model->intensity = model->ds[0] >= INTENSITY_THRESHOLD ? HIGH : LOW;
 }
 
 

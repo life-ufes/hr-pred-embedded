@@ -6,7 +6,7 @@
 #define BMI 23.82f
 #define AGE 26.0f
 
-void task_inference(void *params){
+void task_inference_eam(void *params){
 
     buffer_t * bf = NULL;
 

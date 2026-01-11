@@ -1,0 +1,54 @@
+menu "ML Model Configuration"
+
+    choice ML_MODEL_SELECTION
+        prompt "Select ML Model to run"
+        default EXPONENTIAL_APPROXIMATION_MODEL
+        help
+            Choose which model will be compiled and executed.
+
+        config EXPONENTIAL_APPROXIMATION_MODEL
+            bool "Exponential Approximation Model"
+            help
+                Uses the default exponential model.
+
+        config DYNAMIC_EXPONENTIAL_MODEL
+            bool "Dynamic Exponential Model"
+            help
+                Uses the dual-tau exponential model.
+    endchoice
+
+    choice EA_SENSOR_TYPE
+        prompt "Sensor Source for EA Model"
+        depends on EXPONENTIAL_APPROXIMATION_MODEL
+        default EA_SENSOR_ACC
+        help
+            Choose which weight set will be loaded (Accelerometer or Gyroscope).
+
+        config EA_SENSOR_ACC
+            bool "Accelerometer (Acc)"
+        
+        config EA_SENSOR_GYRO
+            bool "Gyroscope (Gyro)"
+    endchoice   
+
+    choice DEM_SENSOR_TYPE
+        prompt "Dynamic Exponential Model: Sensor Source"
+        depends on DYNAMIC_EXPONENTIAL_MODEL
+        default DEM_SENSOR_ACC
+        help
+            Choose which weight set will be loaded (Accelerometer or Gyroscope).
+
+        config DEM_SENSOR_ACC
+            bool "Accelerometer (Acc)"
+            
+        config DEM_SENSOR_GYRO
+            bool "Gyroscope (Gyro)"
+    endchoice
+
+    # config ML_MODEL_VERSION
+    #     string "Model Version String"
+    #     default "v1.0.2"
+    #     help
+    #         Uma string para identificar a versão do modelo no log.
+
+endmenu

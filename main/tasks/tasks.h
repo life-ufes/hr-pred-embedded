@@ -38,7 +38,10 @@ extern buffer_t buffer_p[NUM_BUFFERS];
 // Tasks declarations
 void task_receive(void *params);
 void task_preprocess(void *params);
-void task_inference(void *params);
+
+void task_inference_eam(void *params);
+void task_inference_dem(void *params);
+
 void task_send(void *params);
 
 void init_pipeline(void);
