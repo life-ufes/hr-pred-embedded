@@ -8,9 +8,14 @@ def main(args):
 
 	plt.figure(figsize=(12,6))
 
-	plt.plot(df.index, df['hr_reg'], color='blue', linewidth=1, linestyle='--', alpha=0.5, label='HR_reg')
-	plt.plot(df.index, df['predicted_values'], color="green", linewidth=1, label="HR_pred")
-	plt.plot(df.index, df['ground_truth_values'], color="red", linewidth=1, label="HR_gt")
+	x = df.index + 60
+
+	plt.plot(x, df['hr_reg'], color='blue', linewidth=1, linestyle='--', alpha=0.5, label='HR_reg')
+	plt.plot(x, df['predicted_values'], color="green", linewidth=1, label="HR_pred")
+	plt.plot(x, df['ground_truth_values'], color="red", linewidth=1, label="HR_gt")
+	
+	plt.axvline(x=60, color='yellow', linestyle=':', linewidth=1, label='Train')
+	plt.axvline(x=420, color='blue', linestyle=':', linewidth=1, label='Test')
 
 	plt.title('Análise Comparativa dos HRs ao Longo do Tempo')
 	plt.xlabel('Amostras')
