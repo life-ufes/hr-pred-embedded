@@ -7,8 +7,8 @@
 // ==========================================
 #if defined(CONFIG_SENSOR_ACC)
 #define INITIAL_WEIGHT_1 60.0f
-#define B_HIGH 60.0f
-#define B_LOW 40.0f
+#define B_HIGH 40.0f
+#define B_LOW 20.0f
 
 // ==========================================
 // GYRO

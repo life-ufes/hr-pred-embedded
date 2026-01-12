@@ -3,8 +3,10 @@
 #include "exp_approx_model.h"
 
 // Just for tests
-#define BMI 23.82f
-#define AGE 26.0f
+#define BMI 22.7f
+#define AGE 26.9f
+
+// TODO: apply gender by %
 
 void task_inference_eam(void *params){
 
@@ -13,6 +15,9 @@ void task_inference_eam(void *params){
     eam_t model;
     ea_model_init(&model);
     ea_model_set_user_data(&model, BMI, MALE, AGE);
+
+    int set_start_hr_train = 0;
+    int set_start_hr_test = 0;
 
     while(1) {
         xQueueReceive(filtered_data_queue, &bf, portMAX_DELAY);
@@ -27,6 +32,20 @@ void task_inference_eam(void *params){
         }
         
         ea_model_predict(&model);
+
+        // TODO: improve this logic
+        if (bf->train && !set_start_hr_train)
+        {
+            model.next_hr = bf->hr_gt;
+            set_start_hr_train = 1;
+            set_start_hr_test = 0;
+        }
+        else if (!bf->train && !set_start_hr_test)
+        {
+            model.next_hr = bf->hr_gt;
+            set_start_hr_train = 0;
+            set_start_hr_test = 1;
+        }
 
         bf->hr = model.next_hr;
 

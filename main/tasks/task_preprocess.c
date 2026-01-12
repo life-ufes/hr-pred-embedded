@@ -70,7 +70,9 @@ void task_preprocess(void *params)
 float activity_level(const float *const signal, int len)
 {
     ewma_t ewma_filter = {
-        .alpha = 0.0769, // Calculated manually
+        // .alpha = 0.05, Value used for best results until now
+
+        .alpha = 0.0769, // Calculated manually for 25 samples
         .last_value = signal[0]};
     for (int i = 0; i < len; i++)
     {

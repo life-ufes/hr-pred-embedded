@@ -4,31 +4,6 @@
 #include "exp_approx_model.h"
 #include "eam_weights.h"
 
-// acc
-// #define INITIAL_WEIGHT_1 93.75f
-
-// gyro
-// #define INITIAL_WEIGHT_1 56.25f
-
-// #define INITIAL_WEIGHT_2 0.82f
-// #define INITIAL_WEIGHT_3 -0.90f
-// #define INITIAL_WEIGHT_4 -6.44f
-// #define INITIAL_WEIGHT_5 -0.09f
-
-// #define TAU 56.25f
-
-// acc 
-// #define B_HIGH 60.0f
-// #define B_LOW 40.0f
-
-// gyro
-// #define B_HIGH 80.0f
-// #define B_LOW 60.0f
-
-// #define L_RATE 0.0092f
-// #define INTENSITY_TRESHOLD 1.0f
-
-
 // ----------------------------
 void ea_model_init(eam_t *model)
 {
