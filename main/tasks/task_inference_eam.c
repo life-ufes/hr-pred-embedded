@@ -25,7 +25,7 @@ void task_inference_eam(void *params){
         // printf("INFERENCE TASK - Activity Level: %f\n HR Ground Truth: %f\n ", bf->al, bf->hr_gt);
 
         ea_model_set_al(&model, bf->al);
-        ea_model_handle_intensity(&model);
+        ea_model_handle_intensity(&model, bf->al_raw);
 
         if(bf->train){
             ea_model_partial_fit(&model, bf->hr_gt);
