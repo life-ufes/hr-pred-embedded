@@ -48,6 +48,7 @@ void task_preprocess(void *params)
 
         // Aggregating
         aggregate_acc_window(buffer->acc[0], buffer->acc[1], buffer->acc[2], agg_signal, WINDOW_LEN);
+        clip(agg_signal, WINDOW_LEN, 1.0f);
 
         // EWMA
         float al = activity_level(agg_signal, WINDOW_LEN);

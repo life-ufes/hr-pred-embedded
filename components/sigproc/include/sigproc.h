@@ -19,3 +19,5 @@ typedef struct ewma_t {
 
 float ewma_update(ewma_t * const filter, const float input);
 
+
+void clip(float * agg_signal, int len, float cut);
