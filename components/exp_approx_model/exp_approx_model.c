@@ -41,9 +41,22 @@ void ea_model_set_user_data(eam_t *model, float bmi, Genre g, int age)
 
 
 // ----------------------------------------
-void ea_model_handle_intensity(eam_t *model)
+void ea_model_handle_intensity(eam_t *model, float al_raw)
 {
-    model->intensity = model->ds[0] >= INTENSITY_THRESHOLD ? HIGH : LOW;
+    static int debounce_counter = 0;
+    
+    Intensity detected_intensity = (al_raw >= INTENSITY_THRESHOLD) ? HIGH : LOW;
+
+    if (detected_intensity != model->intensity) {
+        debounce_counter++;
+
+        if (debounce_counter >= INTENSITY_DEBOUNCE_LIMIT) {
+            model->intensity = detected_intensity;
+            debounce_counter = 0; // Reseta para a próxima vez
+        }
+    } else {
+        debounce_counter = 0;
+    }
 }
 
 

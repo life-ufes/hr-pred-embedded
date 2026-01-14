@@ -45,7 +45,7 @@ void de_model_init(dem_t *model);
 
 void de_model_set_user_data(dem_t *model, float bmi, gender_dem_t g, int age);
 
-void de_model_handle_intensity(dem_t *model);
+void de_model_handle_intensity(dem_t *model, float al_raw);
 
 void de_model_handle_phase(dem_t *model);
 
