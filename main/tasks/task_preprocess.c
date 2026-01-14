@@ -14,18 +14,22 @@ void aggregate_acc_window(const float *const w1, const float *const w2, const fl
 // Impl
 void task_preprocess(void *params)
 {
-    static __attribute__((aligned(16))) float fir_coeffs[COEFFS_LEN] = {0.05637224f, 0.9087878f, 0.05637224f, 0.0f};
-    static __attribute__((aligned(16))) float delay_line[COEFFS_LEN + 4];
-    static __attribute__((aligned(16))) float temp_input[3][WINDOW_LEN] = {{0}, {0}, {0}};
+    // static __attribute__((aligned(16))) float fir_coeffs[COEFFS_LEN] = {0.05637224f, 0.9087878f, 0.05637224f, 0.0f};
+    static __attribute__((aligned(16))) float fir_coeffs[COEFFS_LEN] = {-0.5f, 1.0f, -0.5f, 0.0f};
+    static __attribute__((aligned(16))) float temp_input[3][WINDOW_LEN];
+
+    static __attribute__((aligned(16))) float delay_line_x[COEFFS_LEN + 4];
+    static __attribute__((aligned(16))) float delay_line_y[COEFFS_LEN + 4];
+    static __attribute__((aligned(16))) float delay_line_z[COEFFS_LEN + 4];
 
     fir_f32_t fir_x, fir_y, fir_z;
     buffer_t *buffer = NULL;
     float agg_signal[WINDOW_LEN] = {0};
     
     // Initialize fir filter
-    ESP_ERROR_CHECK(dsps_fir_init_f32(&fir_x, fir_coeffs, delay_line, COEFFS_LEN));
-    ESP_ERROR_CHECK(dsps_fir_init_f32(&fir_y, fir_coeffs, delay_line, COEFFS_LEN));
-    ESP_ERROR_CHECK(dsps_fir_init_f32(&fir_z, fir_coeffs, delay_line, COEFFS_LEN));
+    ESP_ERROR_CHECK(dsps_fir_init_f32(&fir_x, fir_coeffs, delay_line_x, COEFFS_LEN));
+    ESP_ERROR_CHECK(dsps_fir_init_f32(&fir_y, fir_coeffs, delay_line_y, COEFFS_LEN));
+    ESP_ERROR_CHECK(dsps_fir_init_f32(&fir_z, fir_coeffs, delay_line_z, COEFFS_LEN));
 
     ESP_LOGI("PREPROCESS", "Filters initialized successfully");
 
@@ -48,11 +52,15 @@ void task_preprocess(void *params)
 
         // Aggregating
         aggregate_acc_window(buffer->acc[0], buffer->acc[1], buffer->acc[2], agg_signal, WINDOW_LEN);
-        clip(agg_signal, WINDOW_LEN, 1.0f);
-
-        // EWMA
-        float al = activity_level(agg_signal, WINDOW_LEN);
         
+        // EWMA
+        float al_raw = activity_level(agg_signal, WINDOW_LEN);
+        buffer->al_raw = al_raw;
+        
+        // Calculating ALnorm by clipped acc data
+        clip(agg_signal, WINDOW_LEN, 1.0f);
+        float al = activity_level(agg_signal, WINDOW_LEN);         
+
         #ifdef CONFIG_EXPONENTIAL_APPROXIMATION_MODEL
             buffer->al = al;
         #else
@@ -72,6 +80,8 @@ float activity_level(const float *const signal, int len)
 {
     ewma_t ewma_filter = {
         // .alpha = 0.05, Value used for best results until now
+        // .alpha = 0.01586 //-> 1s window
+        // .alpha = 0.0392 // -> 2s window
 
         .alpha = 0.0769, // Calculated manually for 25 samples
         .last_value = signal[0]};
