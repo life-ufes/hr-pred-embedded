@@ -4,6 +4,9 @@ from .plotter import LivePlotter
 from .stream import DataStreamer
 from datetime import datetime
 import struct
+import pandas as pd
+import os
+
 
 class EAModelMonitor:
     
@@ -39,12 +42,41 @@ class EAModelMonitor:
 
 
     def _on_serial_rx(self, data: bytes):
-        sample = ModelMetricsBuffer.parse_sample(data)
-        
-        if self.debug:
-            print(f"[RX - Params] {sample}\n")
-        
-        self.metrics.add_sample(sample)
+
+        sample_str = data.decode(encoding="utf-8").strip()
+        sample_str = sample_str[:-1]
+        sample_list = [float(metric) for metric in sample_str.split(",")]
+
+        # acc_x = sample_list[0:25]
+        # acc_y = sample_list[25:50]
+        # acc_z = sample_list[50:75]
+
+        # 2. Criar um DataFrame temporário para este lote
+        # df_batch = pd.DataFrame({
+        #     'acc_x': acc_x,
+        #     'acc_y': acc_y,
+        #     'acc_z': acc_z
+        # })
+        df_batch = pd.DataFrame({
+            "agg": sample_list
+        })
+
+        # 3. Caminho do arquivo
+        csv_file = 'dados_micro_validacao.csv'
+
+        # 4. Salvar no arquivo
+        # Se o arquivo não existir, escreve com cabeçalho. 
+        # Se existir, apenas anexa (append) sem repetir o cabeçalho.
+        file_exists = os.path.isfile(csv_file)
+        df_batch.to_csv(csv_file, mode='a', index=False, header=not file_exists)
+
+        # Opcional: print para monitorar no terminal
+        print(f"Lote salvo. Total de linhas: {len(df_batch)}")
+
+        # sample = ModelMetricsBuffer.parse_sample(data)        
+        # if self.debug:
+        #     print(f"[RX - Params] {sample}\n")
+        # self.metrics.add_sample(sample)
 
 
     def _on_data_ready(self, data: list):

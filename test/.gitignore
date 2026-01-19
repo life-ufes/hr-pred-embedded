@@ -2,3 +2,5 @@
 *.png
 __pycache__/
 data/
+selected_output/
+output/

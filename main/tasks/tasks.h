@@ -21,19 +21,24 @@ extern QueueHandle_t inference_result_queue;
 
 extern SemaphoreHandle_t uart_mutex;
 
+
+#define WINDOW_LEN_ALIGNMENT 28
+
 // union buffers
 typedef struct {
     float hr_gt;
     int train;
     float al_raw;
-    
+
+    float padding;  // memory alignment
+
     union {
-        float acc[3][WINDOW_LEN];
+        __attribute__((aligned(16))) float acc[3][WINDOW_LEN_ALIGNMENT];
         float al;
         float als[3];
         float hr;
     };
-} buffer_t;
+} __attribute__((aligned(16))) buffer_t;
 
 extern buffer_t buffer_p[NUM_BUFFERS];
 

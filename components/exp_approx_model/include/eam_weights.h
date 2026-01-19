@@ -10,6 +10,11 @@
 #define B_HIGH 60.0f
 #define B_LOW 40.0f
 
+// #define INITIAL_WEIGHT_1 77.19f
+// #define B_HIGH 120.0f
+// #define B_LOW 80.0f
+
+
 // ==========================================
 // GYRO
 // ==========================================
@@ -28,6 +33,10 @@
 #define INITIAL_WEIGHT_5 -0.09f
 
 #define TAU 56.25f
+// #define TAU 75.0f
+
+
+// #define L_RATE 0.01f
 #define L_RATE 0.0092f
 #define INTENSITY_THRESHOLD 1.0f
 #define INTENSITY_DEBOUNCE_LIMIT 5
