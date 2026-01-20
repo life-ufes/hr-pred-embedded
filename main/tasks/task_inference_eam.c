@@ -49,7 +49,7 @@ void task_inference_eam(void *params){
 
         bf->hr = model.next_hr;
 
-        // ea_model_debug(&model, bf->hr_gt);
+        ea_model_debug(&model, bf->hr_gt);
 
         xQueueSend(inference_result_queue, &bf, portMAX_DELAY);
     }

@@ -7,8 +7,8 @@
 // ==========================================
 #if defined(CONFIG_SENSOR_ACC)
 #define INITIAL_WEIGHT_1 60.0f
-#define B_HIGH 40.0f
-#define B_LOW 20.0f
+#define B_HIGH 120.0f
+#define B_LOW 80.0f
 
 // ==========================================
 // GYRO
@@ -29,9 +29,10 @@
 #define INITIAL_WEIGHT_5 -0.70f
 #define INITIAL_WEIGHT_6 -0.60f
 
-#define TAU_RISE 50.0f      // The rise is slower than the decay
+#define TAU_RISE 75.0f      // The rise is slower than the decay
 #define TAU_DECAY 30.0f
 
-#define L_RATE 0.005f
-#define INTENSITY_THRESHOLD 1.0f
+// #define L_RATE 0.005f
+#define L_RATE 0.01f
+#define INTENSITY_THRESHOLD 0.2f
 #define INTENSITY_DEBOUNCE_LIMIT 5

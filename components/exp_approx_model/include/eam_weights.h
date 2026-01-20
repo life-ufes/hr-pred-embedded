@@ -7,12 +7,13 @@
 // ==========================================
 #if defined(CONFIG_SENSOR_ACC)
 #define INITIAL_WEIGHT_1 93.75f
-#define B_HIGH 60.0f
-#define B_LOW 40.0f
+// #define B_HIGH 60.0f
+// #define B_LOW 40.0f
+
 
 // #define INITIAL_WEIGHT_1 77.19f
-// #define B_HIGH 120.0f
-// #define B_LOW 80.0f
+#define B_HIGH 120.0f
+#define B_LOW 100.0f
 
 
 // ==========================================
@@ -36,7 +37,7 @@
 // #define TAU 75.0f
 
 
-// #define L_RATE 0.01f
-#define L_RATE 0.0092f
-#define INTENSITY_THRESHOLD 1.0f
+#define L_RATE 0.02f
+// #define L_RATE 0.0092f
+#define INTENSITY_THRESHOLD 0.2f
 #define INTENSITY_DEBOUNCE_LIMIT 5

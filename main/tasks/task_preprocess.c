@@ -44,18 +44,6 @@ void task_preprocess(void *params)
     {
         // Receive raw data
         xQueueReceive(raw_data_queue, &buffer, portMAX_DELAY);
-
-
-
-        // DEBUG
-        for (int x = 0; x < WINDOW_LEN; x++)
-        {
-            printf("%f,", buffer->acc[0][x]);
-        }
-        printf("\n");
-
-
-
         
         // Auxiliar input buffer
         for (int i = 0; i < 3; i++)
