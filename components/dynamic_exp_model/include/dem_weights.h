@@ -6,8 +6,8 @@
 // ACC
 // ==========================================
 #if defined(CONFIG_SENSOR_ACC)
-#define INITIAL_WEIGHT_1 60.0f
-#define B_HIGH 120.0f
+#define INITIAL_WEIGHT_1 90.0f
+#define B_HIGH 70.0f
 #define B_LOW 80.0f
 
 // ==========================================
@@ -29,10 +29,10 @@
 #define INITIAL_WEIGHT_5 -0.70f
 #define INITIAL_WEIGHT_6 -0.60f
 
-#define TAU_RISE 75.0f      // The rise is slower than the decay
-#define TAU_DECAY 30.0f
+#define TAU_RISE 20.0f      // The rise is slower than the decay
+#define TAU_DECAY 40.0f
 
 // #define L_RATE 0.005f
-#define L_RATE 0.01f
+#define L_RATE 0.02f
 #define INTENSITY_THRESHOLD 0.2f
 #define INTENSITY_DEBOUNCE_LIMIT 5
