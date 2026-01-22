@@ -14,8 +14,8 @@ def main(args):
 	plt.plot(x, df['predicted_values'], color="green", linewidth=1, label="HR_pred")
 	plt.plot(x, df['ground_truth_values'], color="red", linewidth=1, label="HR_gt")
 	
-	plt.axvline(x=60, color='yellow', linestyle=':', linewidth=1, label='Train')
-	plt.axvline(x=420, color='blue', linestyle=':', linewidth=1, label='Test')
+	plt.axvline(x=60, color='darkred', linestyle=':', linewidth=1, label='Train')
+	plt.axvline(x=480, color='darkred', linestyle=':', linewidth=1, label='Test')
 
 	plt.title('Análise Comparativa dos HRs ao Longo do Tempo')
 	plt.xlabel('Amostras')
