@@ -4,17 +4,12 @@
 #include "sigproc.h"
 #include "esp_dsp.h"
 
-float acc_aggregation(const acc_t *const acc_sig)
+float magnitude(float x, float y, float z)
 {
-    if(!acc_sig) {
-        return 0.0f;
-    }
-
     return sqrtf(
-        (acc_sig->x * acc_sig->x) +
-        (acc_sig->y * acc_sig->y) +
-        (acc_sig->z * acc_sig->z)
-    );
+        (x * x) +
+        (y * y) +
+        (z * z));
 }
 
 float ewma_update(ewma_t *const filter, const float input)
