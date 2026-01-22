@@ -5,6 +5,7 @@
 #define BMI 23.82f
 #define AGE 26.0f
 
+// TODO: refactor task
 void task_inference_dem(void *params)
 {
     buffer_t *bf = NULL;
@@ -20,7 +21,7 @@ void task_inference_dem(void *params)
     {
         xQueueReceive(filtered_data_queue, &bf, portMAX_DELAY);
 
-        de_model_set_als(&model, bf->als);
+        // de_model_set_als(&model, bf->als);
         de_model_handle_intensity(&model, bf->al_raw);
         de_model_handle_phase(&model);
 

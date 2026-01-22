@@ -40,15 +40,17 @@ void task_inference_eam(void *params){
             set_start_hr_train = 1;
             set_start_hr_test = 0;
         }
-        else if (!bf->train && !set_start_hr_test)
-        {
-            model.next_hr = bf->hr_gt;
-            set_start_hr_train = 0;
-            set_start_hr_test = 1;
-        }
+        // else if (!bf->train && !set_start_hr_test)
+        // {
+        //     model.next_hr = bf->hr_gt;
+        //     set_start_hr_train = 0;
+        //     set_start_hr_test = 1;
+        // }
 
         bf->hr = model.next_hr;
 
+        // TODO: Prints results by UART in next task
+        // TODO: rename send and receive tasks
         ea_model_debug(&model, bf->hr_gt);
 
         xQueueSend(inference_result_queue, &bf, portMAX_DELAY);

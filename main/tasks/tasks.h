@@ -10,7 +10,11 @@
 #include "driver/uart.h"
 
 #define NUM_BUFFERS 4
+
 #define WINDOW_LEN 25
+#define WINDOW_LEN_ALIGNMENT 28
+
+#define SIGNAL_FREQUENCY 25.0f
 #define SERIAL_SIGNAL_LEN WINDOW_LEN * 3
 
 // Global queues
@@ -21,24 +25,20 @@ extern QueueHandle_t inference_result_queue;
 
 extern SemaphoreHandle_t uart_mutex;
 
-
-#define WINDOW_LEN_ALIGNMENT 28
-
 // union buffers
-typedef struct {
+typedef struct
+{
     float hr_gt;
     int train;
     float al_raw;
 
-    float padding;  // memory alignment
-
-    union {
-        __attribute__((aligned(16))) float acc[3][WINDOW_LEN_ALIGNMENT];
+    union
+    {
+        float acc[3][WINDOW_LEN];
         float al;
-        float als[3];
         float hr;
     };
-} __attribute__((aligned(16))) buffer_t;
+} buffer_t;
 
 extern buffer_t buffer_p[NUM_BUFFERS];
 
@@ -54,6 +54,5 @@ void task_send(void *params);
 void init_pipeline(void);
 void init_uart(void);
 
-
 // Utils
-void print_buffer(float * buffer);
+void print_buffer(float *buffer);
