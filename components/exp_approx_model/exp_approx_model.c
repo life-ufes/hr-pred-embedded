@@ -31,12 +31,12 @@ void ea_model_init(eam_t *model)
 
 
 // -------------------------------------------------------------------
-void ea_model_set_user_data(eam_t *model, float bmi, Genre g, int age)
+void ea_model_set_user_data(eam_t *model, float bmi, int age, float male, float female)
 {
     model->ds[1] = bmi;
     model->ds[2] = (float)age;
-    model->ds[3] = g == MALE ? 1.0f : 0.0f;
-    model->ds[4] = g == FEMALE ? 1.0f : 0.0f;
+    model->ds[3] = male;
+    model->ds[4] = female;
 }
 
 
@@ -45,7 +45,7 @@ void ea_model_handle_intensity(eam_t *model, float al_raw)
 {
     static int debounce_counter = 0;
     
-    Intensity detected_intensity = (al_raw >= INTENSITY_THRESHOLD) ? HIGH : LOW;
+    intensity_eam_t detected_intensity = (al_raw >= INTENSITY_THRESHOLD) ? HIGH : LOW;
 
     if (detected_intensity != model->intensity) {
         debounce_counter++;

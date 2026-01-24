@@ -30,24 +30,4 @@ menu "ML Model Configuration"
             bool "Gyroscope (Gyro)"
     endchoice   
 
-    # choice DEM_SENSOR_TYPE
-    #     prompt "Sensor Source for DE Model"
-    #     depends on DYNAMIC_EXPONENTIAL_MODEL
-    #     default DEM_SENSOR_ACC
-    #     help
-    #         Choose which weight set will be loaded (Accelerometer or Gyroscope).
-
-    #     config DEM_SENSOR_ACC
-    #         bool "Accelerometer (Acc)"
-            
-    #     config DEM_SENSOR_GYRO
-    #         bool "Gyroscope (Gyro)"
-    # endchoice
-
-    # config ML_MODEL_VERSION
-    #     string "Model Version String"
-    #     default "v1.0.2"
-    #     help
-    #         Uma string para identificar a versão do modelo no log.
-
 endmenu

@@ -4,8 +4,10 @@
 #include "comm_protocol.h"
 
 // Just for tests
-#define BMI 22.7f
+#define BMI 20.7f
 #define AGE 26.9f
+#define MALE 0.52f
+#define FEMALE 0.42f
 
 void task_inference_eam(void *params)
 {
@@ -14,7 +16,7 @@ void task_inference_eam(void *params)
     // Setup model
     eam_t model;
     ea_model_init(&model);
-    ea_model_set_user_data(&model, BMI, MALE, AGE);
+    ea_model_set_user_data(&model, BMI, AGE, MALE, FEMALE);
 
     // HR adjustment flag
     int set_start_hr_train = 0;
