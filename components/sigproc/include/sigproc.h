@@ -1,7 +1,6 @@
 #pragma once
 
-// Vector norm
-float magnitude(float x, float y, float z);
+void calc_accel_mag_vec(float *x, float *y, float *z, float *out, int len);
 
 // Exponential Weighted Moving Average
 typedef struct ewma_t

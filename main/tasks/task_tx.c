@@ -1,6 +1,6 @@
 #include "tasks.h"
 
-void task_send(void *params)
+void task_tx(void *params)
 {
     buffer_t * bf = NULL;
     const int uart_port = UART_NUM_0;

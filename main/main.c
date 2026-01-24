@@ -17,7 +17,7 @@ void app_main(void)
 
     init_pipeline();
     
-    xTaskCreate(task_receive, "receive_task", 4096, NULL, 5, NULL);
+    xTaskCreate(task_rx, "task_rx", 4096, NULL, 5, NULL);
     xTaskCreate(task_preprocess, "preprocess_task", 2048, NULL, 5, NULL);
     
     #ifdef CONFIG_EXPONENTIAL_APPROXIMATION_MODEL
@@ -26,5 +26,5 @@ void app_main(void)
         xTaskCreate(task_inference_dem, "inference_task", 4096, NULL, 5, NULL);   
     #endif
     
-    xTaskCreate(task_send, "send_task", 2048, NULL, 5, NULL);
+    xTaskCreate(task_tx, "task_tx", 2048, NULL, 5, NULL);
 }

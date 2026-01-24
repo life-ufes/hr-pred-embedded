@@ -7,15 +7,16 @@ QueueHandle_t inference_result_queue;
 buffer_t buffer_p[NUM_BUFFERS];
 SemaphoreHandle_t uart_mutex;
 
-void init_pipeline(void) {
+void init_pipeline(void)
+{
+    buffer_pool_queue = xQueueCreate(NUM_BUFFERS, sizeof(buffer_t *));
+    raw_data_queue = xQueueCreate(NUM_BUFFERS, sizeof(buffer_t *));
+    filtered_data_queue = xQueueCreate(NUM_BUFFERS, sizeof(buffer_t *));
+    inference_result_queue = xQueueCreate(NUM_BUFFERS, sizeof(buffer_t *));
 
-    buffer_pool_queue = xQueueCreate(NUM_BUFFERS, sizeof(buffer_t*));
-    raw_data_queue = xQueueCreate(NUM_BUFFERS, sizeof(buffer_t*));
-    filtered_data_queue = xQueueCreate(NUM_BUFFERS, sizeof(buffer_t*));
-    inference_result_queue = xQueueCreate(NUM_BUFFERS, sizeof(buffer_t*));
-
-    for(int x=0; x<NUM_BUFFERS; x++) {
-        buffer_t * bf_ptr = &buffer_p[x];
+    for (int x = 0; x < NUM_BUFFERS; x++)
+    {
+        buffer_t *bf_ptr = &buffer_p[x];
         xQueueSend(buffer_pool_queue, &bf_ptr, portMAX_DELAY);
     }
 }
@@ -37,16 +38,17 @@ void init_uart(void)
         .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
         .source_clk = UART_SCLK_DEFAULT};
 
-    ESP_ERROR_CHECK(uart_driver_install(uart_port_num, uart_buffer_size, uart_buffer_size, queue_size, &uart_queue, intr_alloc_flags));
-    ESP_ERROR_CHECK(uart_param_config(uart_port_num, &uart_config));
-}
+    ESP_ERROR_CHECK(
+        uart_driver_install(
+            uart_port_num,
+            uart_buffer_size,
+            uart_buffer_size,
+            queue_size,
+            &uart_queue,
+            intr_alloc_flags));
 
-//  Utils
-void print_buffer(float *buffer)
-{
-    printf("BUFFER: ");
-    for(int x=0; x<WINDOW_LEN; x++){
-        printf("%f ", buffer[x]);
-    }
-    printf("\n");
+    ESP_ERROR_CHECK(
+        uart_param_config(
+            uart_port_num,
+            &uart_config));
 }

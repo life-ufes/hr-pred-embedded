@@ -7,10 +7,12 @@
 #define AGE 26.9f
 
 // TODO: apply gender by %
+// Receive this daa from serial
 
-void task_inference_eam(void *params){
+void task_inference_eam(void *params)
+{
 
-    buffer_t * bf = NULL;
+    buffer_t *bf = NULL;
 
     eam_t model;
     ea_model_init(&model);
@@ -19,27 +21,30 @@ void task_inference_eam(void *params){
     int set_start_hr_train = 0;
     int set_start_hr_test = 0;
 
-    while(1) {
+    while (1)
+    {
         xQueueReceive(filtered_data_queue, &bf, portMAX_DELAY);
-
-        // printf("INFERENCE TASK - Activity Level: %f\n HR Ground Truth: %f\n ", bf->al, bf->hr_gt);
 
         ea_model_set_al(&model, bf->al);
         ea_model_handle_intensity(&model, bf->al_raw);
 
-        if(bf->train){
+        if (bf->train)
+        {
+            if (!set_start_hr_train)
+            {
+                model.next_hr = bf->hr_gt;
+                set_start_hr_train = 1;
+            }
             ea_model_partial_fit(&model, bf->hr_gt);
         }
-        
+        else
+        {
+            set_start_hr_train = 0;
+        }
+
         ea_model_predict(&model);
 
         // TODO: improve this logic
-        if (bf->train && !set_start_hr_train)
-        {
-            model.next_hr = bf->hr_gt;
-            set_start_hr_train = 1;
-            set_start_hr_test = 0;
-        }
         // else if (!bf->train && !set_start_hr_test)
         // {
         //     model.next_hr = bf->hr_gt;
