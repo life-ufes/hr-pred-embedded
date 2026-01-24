@@ -16,21 +16,26 @@ class EAModelMonitor:
         self.real_time_flag = real_time
         self.output = output_path
         self.debug = debug
+        self.raw_buffer = bytearray()
+
 
         self.metrics = ModelMetricsBuffer(
             timestamp=self.timestamp
         )
-        
+
+
         self.serial = SerialProvider(
             port=port, 
             baud_rate=baud_rate, 
             on_rx_callback=self._on_serial_rx
         )
 
+
         self.data_streamer = DataStreamer( 
             csv_path=csv_path, 
             on_data_ready_callback=self._on_data_ready
         )
+
 
         self.plotter = LivePlotter(
             self.metrics, 
@@ -42,43 +47,100 @@ class EAModelMonitor:
 
 
     def _on_serial_rx(self, data: bytes):
+        # sample = ModelMetricsBuffer.parse_sample(data)        
+        # if self.debug:
+        #     print(f"[RX - Params] {sample}\n")
+        # self.metrics.add_sample(sample)
 
-        # sample_str = data.decode(encoding="utf-8").strip()
-        # sample_str = sample_str[:-1]
-        # sample_list = [float(metric) for metric in sample_str.split(",")]
+        # ---------------------------------------------------
+        """Callback chamado sempre que chegam bytes na UART"""
+        self.raw_buffer.extend(data)
+        
+        # Tentamos processar o buffer enquanto houver dados suficientes para um cabeçalho (4 bytes deadbeef + 3 bytes meta)
+        while len(self.raw_buffer) >= 7:
+            # 1. Sincronização: Procura o marcador 0xDEADBEEF
+            header_index = self.raw_buffer.find(b'\xDE\xAD\xBE\xEF')
+            
+            if header_index == -1:
+                # Se não achou o marcador, limpa o buffer deixando apenas os últimos 3 bytes 
+                # (caso o 0xDE esteja no final do buffer)
+                del self.raw_buffer[:-3]
+                break
+            
+            # Se achou o marcador mas não no início, descarta o que veio antes
+            if header_index > 0:
+                del self.raw_buffer[:header_index]
+                continue
 
-        # # acc_x = sample_list[0:25]
-        # # acc_y = sample_list[25:50]
-        # # acc_z = sample_list[50:75]
+            # 2. Verificação de Metadados (Tipo + Tamanho)
+            # Se temos o header mas não temos os metadados completos (header + 3 bytes), aguardamos mais dados
+            if len(self.raw_buffer) < 7:
+                break
+                
+            pkt_type = self.raw_buffer[4]
+            len_low = self.raw_buffer[5]
+            len_high = self.raw_buffer[6]
+            payload_len = len_low | (len_high << 8)
+            
+            # 3. Verificação do Pacote Completo (Meta + Payload + Checksum)
+            total_packet_len = 7 + payload_len + 1
+            if len(self.raw_buffer) < total_packet_len:
+                break # Aguarda chegar o resto do payload
+            
+            # Extrai o pacote completo para processamento
+            packet = self.raw_buffer[:total_packet_len]
+            payload = packet[7:-1]
+            received_checksum = packet[-1]
+            
+            # 4. Validação do Checksum XOR
+            calc_checksum = pkt_type ^ len_low ^ len_high
+            for b in payload:
+                calc_checksum ^= b
+            
+            if calc_checksum == received_checksum:
+                self._handle_valid_packet(pkt_type, payload)
+            else:
+                if self.debug:
+                    print(f"[RX] Erro de Checksum no pacote tipo {pkt_type}")
 
-        # # 2. Criar um DataFrame temporário para este lote
-        # # df_batch = pd.DataFrame({
-        # #     'acc_x': acc_x,
-        # #     'acc_y': acc_y,
-        # #     'acc_z': acc_z
-        # # })
-        # df_batch = pd.DataFrame({
-        #     "agg": sample_list
-        # })
-
-        # # 3. Caminho do arquivo
-        # csv_file = 'dados_micro_validacao.csv'
-
-        # # 4. Salvar no arquivo
-        # # Se o arquivo não existir, escreve com cabeçalho. 
-        # # Se existir, apenas anexa (append) sem repetir o cabeçalho.
-        # file_exists = os.path.isfile(csv_file)
-        # df_batch.to_csv(csv_file, mode='a', index=False, header=not file_exists)
-
-        # # Opcional: print para monitorar no terminal
-        # print(f"Lote salvo. Total de linhas: {len(df_batch)}")
-
-        sample = ModelMetricsBuffer.parse_sample(data)        
-        if self.debug:
-            print(f"[RX - Params] {sample}\n")
-        self.metrics.add_sample(sample)
+            # Remove o pacote processado do buffer e continua procurando o próximo
+            del self.raw_buffer[:total_packet_len]
 
 
+    # -----------------------------------------------------------
+    def _handle_valid_packet(self, pkt_type: int, payload: bytes):
+        """Encaminha o pacote para o destino correto"""
+        
+        if pkt_type == 0x01: # DATA (Telemetria)
+            # Descompacta os 4 floats enviados pelo ESP32 (telemetry_t)
+            # '<ffff' = Little Endian, 4 floats
+            try:
+                hr_gt, al_raw, al, hr = struct.unpack('<ffff', payload)
+                sample = {
+                    'hr_gt': hr_gt,
+                    'al_raw': al_raw,
+                    'al': al,
+                    'hr': hr
+                }
+                
+                if self.debug:
+                    print(f"[RX - Data] HR: {hr:.2f} | AL: {al:.2f}")
+                
+                self.metrics.add_sample(sample)
+                
+            except struct.error:
+                print("[RX] Erro ao descompactar floats de telemetria")
+
+        elif pkt_type == 0x02: # LOG (Strings do ESP_LOG)
+            try:
+                message = payload.decode('utf-8', errors='ignore').strip()
+                # Imprime com cor para diferenciar do resto do terminal
+                print(f"\033[96m[ESP32 LOG] {message}\033[0m")
+            except Exception as e:
+                print(f"[RX] Erro ao decodificar string de log: {e}")
+
+
+    # ----------------------------------
     def _on_data_ready(self, data: list):
         if self.debug:
             print(f"[TX - Ground Truth] {data[-1]} BPM\n")
