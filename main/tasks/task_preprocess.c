@@ -35,62 +35,64 @@ void task_preprocess(void *params)
     ESP_ERROR_CHECK(dsps_fir_init_f32(&fir_y, fir_coeffs, delay_line_y, COEFFS_LEN));
     ESP_ERROR_CHECK(dsps_fir_init_f32(&fir_z, fir_coeffs, delay_line_z, COEFFS_LEN));
 
-    esp_cpu_cycle_count_t start_cycles, end_cycles, cycles_elapsed;
+    esp_cpu_cycle_count_t start_cycles, end_cycles;
     float elapsed_time;
 
     while (1)
     {
         // Receive raw data
-        xQueueReceive(raw_data_queue, &buffer, portMAX_DELAY);
+        if (xQueueReceive(raw_data_queue, &buffer, portMAX_DELAY) == pdTRUE)
+        {
+            // cycle count
+            start_cycles = esp_cpu_get_cycle_count();
 
-        // cycle count
-        start_cycles = esp_cpu_get_cycle_count();
+            // In-place filtering
+            dsps_fir_f32_aes3(&fir_x, buffer->acc[0], buffer->acc[0], WINDOW_LEN);
+            dsps_fir_f32_aes3(&fir_y, buffer->acc[1], buffer->acc[1], WINDOW_LEN);
+            dsps_fir_f32_aes3(&fir_z, buffer->acc[2], buffer->acc[2], WINDOW_LEN);
 
-        // In-place filtering
-        dsps_fir_f32_aes3(&fir_x, buffer->acc[0], buffer->acc[0], WINDOW_LEN);
-        dsps_fir_f32_aes3(&fir_y, buffer->acc[1], buffer->acc[1], WINDOW_LEN);
-        dsps_fir_f32_aes3(&fir_z, buffer->acc[2], buffer->acc[2], WINDOW_LEN);
+            // Acc magnitude
+            calc_accel_mag_vec(
+                buffer->acc[0],
+                buffer->acc[1],
+                buffer->acc[2],
+                acc_mag,
+                WINDOW_LEN);
 
-        // Acc magnitude
-        calc_accel_mag_vec(
-            buffer->acc[0],
-            buffer->acc[1],
-            buffer->acc[2],
-            acc_mag,
-            WINDOW_LEN);
+            // AL raw calc
+            buffer->al_raw = trapz_integral(&al_raw_ctx, acc_mag, WINDOW_LEN);
 
-        // AL raw calc
-        buffer->al_raw = trapz_integral(&al_raw_ctx, acc_mag, WINDOW_LEN);
+            // AL norm calc
+            clip(acc_mag, WINDOW_LEN, 1.0f);
+            buffer->al = trapz_integral(&al_norm_ctx, acc_mag, WINDOW_LEN);
 
-        // AL norm calc
-        clip(acc_mag, WINDOW_LEN, 1.0f);
-        buffer->al = trapz_integral(&al_norm_ctx, acc_mag, WINDOW_LEN);
+            //==================================================
+            // Activity Level calculated with EWMA (alternative)
+            //==================================================
+            // for(int i=0; i<WINDOW_LEN; i++) {
+            //     ewma_update(&al_raw_ctx, acc_mag[i]);
+            // }
+            // buffer->al_raw = al_raw_ctx.last_value;
 
-        //==================================================
-        // Activity Level calculated with EWMA (alternative)
-        //==================================================
-        // for(int i=0; i<WINDOW_LEN; i++) {
-        //     ewma_update(&al_raw_ctx, acc_mag[i]);
-        // }
-        // buffer->al_raw = al_raw_ctx.last_value;
+            // clip(acc_mag, WINDOW_LEN, 1.0f);
+            // for(int i=0; i<WINDOW_LEN; i++) {
+            //     ewma_update(&al_norm_ctx, acc_mag[i]);
+            // }
+            // buffer->al = al_norm_ctx.last_value;
 
-        // clip(acc_mag, WINDOW_LEN, 1.0f);
-        // for(int i=0; i<WINDOW_LEN; i++) {
-        //     ewma_update(&al_norm_ctx, acc_mag[i]);
-        // }
-        // buffer->al = al_norm_ctx.last_value;
+            end_cycles = esp_cpu_get_cycle_count();
+            elapsed_time = (float)(end_cycles - start_cycles) / (float)CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ;
 
-        end_cycles = esp_cpu_get_cycle_count();
-        cycles_elapsed = end_cycles - start_cycles;
-        elapsed_time = (float)cycles_elapsed / (float)CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ;
-        // TODO: Send elapsed time to buffer
-        
-        // ESP_LOGI("PRE_PROCESS", "Elapsed time: %fus", elapsed_time);
-        char log[64]; 
-        snprintf(log, sizeof(log), "[PRE-PROCESS] Elapsed time: %.2fus", elapsed_time);
-        comm_send_packet(PKT_TYPE_LOG, (uint8_t *)log, strlen(log));
+            char log[64];
+            snprintf(log, sizeof(log), "[PRE-PROCESS] Elapsed time: %.2fus", elapsed_time);
+            comm_send_packet(PKT_TYPE_LOG, (uint8_t *)log, strlen(log));
 
-        // Send data to the next stage
-        xQueueSend(filtered_data_queue, &buffer, portMAX_DELAY);
+            // Send data to the next stage
+            xQueueSend(filtered_data_queue, &buffer, portMAX_DELAY);
+        }
+        else
+        {
+            // TODO: log
+        }
     }
 }

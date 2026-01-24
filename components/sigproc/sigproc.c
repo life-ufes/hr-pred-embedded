@@ -40,7 +40,5 @@ float trapz_integral(trapz_ctx_t *const ctx, const float *signal, const int len)
     }
 
     ctx->prev = prev_value;
-
-    // Apenas UMA multiplicação no final em vez de 25
     return running_sum * (ctx->dt * 0.5f);
 }

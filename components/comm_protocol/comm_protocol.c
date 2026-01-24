@@ -11,17 +11,15 @@ void comm_init(void);
 void comm_send_packet(uint8_t type, const uint8_t *payload, uint16_t len);
 QueueHandle_t comm_get_uart_queue(void);
 
-/// @brief
-/// @param
 void comm_init(void)
 {
-    // UART TX Mutex
+    // Create TX mutex
     if (uart_mutex == NULL)
     {
         uart_mutex = xSemaphoreCreateMutex();
     }
 
-    // UART
+    // init UART
     const int uart_port_num = UART_NUM_0;
     uart_config_t uart_config = {
         .baud_rate = 115200,
@@ -36,10 +34,6 @@ void comm_init(void)
     ESP_ERROR_CHECK(uart_param_config(uart_port_num, &uart_config));
 }
 
-/// @brief
-/// @param type
-/// @param payload
-/// @param len
 void comm_send_packet(uint8_t type, const uint8_t *payload, uint16_t len)
 {
     if (uart_mutex == NULL)
@@ -69,16 +63,11 @@ void comm_send_packet(uint8_t type, const uint8_t *payload, uint16_t len)
         }
         tx_buf[7 + len] = checksum;
 
-        // UMA única chamada garante que o pacote saia inteiro
         uart_write_bytes(UART_NUM, (const char *)tx_buf, 7 + len + 1);
-
         xSemaphoreGive(uart_mutex);
     }
 }
 
-/// @brief
-/// @param
-/// @return
 QueueHandle_t comm_get_uart_queue(void)
 {
     return uart_event_queue;

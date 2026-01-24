@@ -42,7 +42,7 @@ class EAModelMonitor:
             output=self.output, 
             timestamp=self.timestamp,
             on_close_callback=self.stop,
-            keys_to_plot=ModelMetricsBuffer.METRIC_KEYS[-3:]
+            keys_to_plot=ModelMetricsBuffer.METRIC_KEYS[:3]
         )
 
 
@@ -112,24 +112,21 @@ class EAModelMonitor:
     def _handle_valid_packet(self, pkt_type: int, payload: bytes):
         """Encaminha o pacote para o destino correto"""
         
-        print("Handle packet")
+        # print("Handle packet")
 
         if pkt_type == 0x01: # DATA (Telemetria)
-            # Descompacta os 4 floats enviados pelo ESP32 (telemetry_t)
-            # '<ffff' = Little Endian, 4 floats
             try:
-                hr_gt, al_raw, al, hr = struct.unpack('<ffff', payload)
+                hr, hr_reg, hr_gt, al, al_raw = struct.unpack('<fffff', payload)    # 5 floats little endian
                 sample = {
+                    'hr': hr,
+                    'hr_reg': hr_reg,
                     'hr_gt': hr_gt,
-                    'al_raw': al_raw,
                     'al': al,
-                    'hr': hr
+                    'al_raw': al_raw,
                 }
                 
-                
-                print(f"[RX - Data] HR: {hr:.2f} | AL: {al:.2f}")
-                
-                # self.metrics.add_sample(sample)
+                print(f"[RX - Data] HR: {hr:.2f} | HR_REG: {hr_reg:.2f} | HR_GT: {hr_gt:.2f}\nAL: {al:.2f} | AL_RAW: {al_raw:.2f}")
+                self.metrics.add_sample(sample)
                 
             except struct.error:
                 print("[RX] Erro ao descompactar floats de telemetria")
