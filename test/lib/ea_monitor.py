@@ -142,12 +142,39 @@ class EAModelMonitor:
 
     # ----------------------------------
     def _on_data_ready(self, data: list):
+        # if self.debug:
+        #     print(f"[TX - Ground Truth] {data[-1]} BPM\n")
+            
+        # payload = struct.pack("<77f", *data) 
+        # self.serial.send(payload)
+
         if self.debug:
             print(f"[TX - Ground Truth] {data[-1]} BPM\n")
             
-        payload = struct.pack("<77f", *data) 
-        self.serial.send(payload)
+        # 1. Gera o payload binário (77 floats)
+        raw_payload = struct.pack("<77f", *data) 
         
+        # 2. Envelopa no protocolo DEADBEEF (Tipo 0x01 para DATA)
+        secure_packet = self._wrap_deadbeef_packet(0x01, raw_payload)
+        
+        # 3. Envia para a queue da serial
+        self.serial.send(secure_packet)
+
+        
+    def _wrap_deadbeef_packet(self, pkt_type: int, payload: bytes) -> bytes:
+        """Adiciona cabeçalho, metadados e checksum ao payload"""
+        header = b'\xDE\xAD\xBE\xEF'
+        length = len(payload)
+        len_low = length & 0xFF
+        len_high = (length >> 8) & 0xFF
+        
+        # Inicia checksum com tipo e bytes de tamanho
+        checksum = pkt_type ^ len_low ^ len_high
+        for b in payload:
+            checksum ^= b
+            
+        return header + struct.pack("B BB", pkt_type, len_low, len_high) + payload + struct.pack("B", checksum)
+
 
     def start(self):
         print("[START] System initialized!")
