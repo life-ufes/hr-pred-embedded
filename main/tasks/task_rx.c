@@ -45,3 +45,37 @@ void task_rx(void *params)
         vTaskDelay(pdMS_TO_TICKS(200));
     }
 }
+
+
+#define PKT_TYPE_DATA 0x01
+#define PKT_TYPE_LOG  0x02
+
+void send_deadbeef_packet(uint8_t type, const uint8_t *payload, uint16_t len) {
+    const uint8_t header[] = {0xDE, 0xAD, 0xBE, 0xEF};
+    uint8_t checksum = 0;
+
+    // 1. Enviar o Header (4 bytes)
+    uart_write_bytes(UART_NUM_0, (const char *)header, 4);
+
+    // 2. Enviar o Tipo e o Tamanho (2 bytes para o tamanho permite pacotes maiores)
+    uint8_t len_low = len & 0xFF;
+    uint8_t len_high = (len >> 8) & 0xFF;
+    
+    uart_write_bytes(UART_NUM_0, (const char *)&type, 1);
+    uart_write_bytes(UART_NUM_0, (const char *)&len_low, 1);
+    uart_write_bytes(UART_NUM_0, (const char *)&len_high, 1);
+
+    // Iniciar cálculo do Checksum com os metadados
+    checksum ^= type;
+    checksum ^= len_low;
+    checksum ^= len_high;
+
+    // 3. Enviar o Payload e calcular Checksum
+    for (uint16_t i = 0; i < len; i++) {
+        checksum ^= payload[i];
+    }
+    uart_write_bytes(UART_NUM_0, (const char *)payload, len);
+
+    // 4. Enviar o Checksum final (1 byte)
+    uart_write_bytes(UART_NUM_0, (const char *)&checksum, 1);
+}

@@ -56,7 +56,7 @@ void task_inference_eam(void *params)
 
         // TODO: Prints results by UART in next task
         // TODO: rename send and receive tasks
-        ea_model_debug(&model, bf->hr_gt);
+        // ea_model_debug(&model, bf->hr_gt);
 
         xQueueSend(inference_result_queue, &bf, portMAX_DELAY);
     }

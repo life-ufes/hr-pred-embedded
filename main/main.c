@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "tasks.h"
+#include "comm_protocol.h"
 
 // Just for tests
 #define AGE        26
@@ -13,6 +14,8 @@
 void app_main(void)
 {
     init_uart();
+    comm_init();
+    
     uart_mutex = xSemaphoreCreateMutex();
 
     init_pipeline();
