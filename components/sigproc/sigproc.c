@@ -4,6 +4,7 @@
 #include "sigproc.h"
 #include "esp_dsp.h"
 
+// ----------------------------------------------------------------------
 void calc_accel_mag_vec(float *x, float *y, float *z, float *out, int len)
 {
     dsps_mul_f32_ae32(x, x, out, len, 1, 1, 1);   // out = x * x
@@ -14,12 +15,14 @@ void calc_accel_mag_vec(float *x, float *y, float *z, float *out, int len)
     dsps_sqrt_f32(out, out, len);                 // out = sqrt(out)
 }
 
+// ------------------------------------------------------
 float ewma_update(ewma_t *const filter, const float input)
 {
     filter->last_value = filter->alpha * input + (1 - filter->alpha) * filter->last_value;
     return filter->last_value;
 }
 
+// --------------------------------------------
 void clip(float *agg_signal, int len, float cut)
 {
     for (int i = 0; i < len; i++)
@@ -28,6 +31,7 @@ void clip(float *agg_signal, int len, float cut)
     }
 }
 
+// -----------------------------------------------------------------------------
 float trapz_integral(trapz_ctx_t *const ctx, const float *signal, const int len)
 {
     float running_sum = 0.0f;

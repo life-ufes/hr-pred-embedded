@@ -26,12 +26,13 @@ void task_inference_eam(void *params)
 
     while (1)
     {
+        // Receive buffer from the previous stage
         if (xQueueReceive(filtered_data_queue, &bf, portMAX_DELAY) == pdTRUE)
         {
             // cycle count
             start_cycles = esp_cpu_get_cycle_count();
 
-            // Set info from buffer
+            // Set model inputs
             ea_model_set_al(&model, bf->al);
             ea_model_handle_intensity(&model, bf->al_raw);
 

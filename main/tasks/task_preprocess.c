@@ -40,7 +40,7 @@ void task_preprocess(void *params)
 
     while (1)
     {
-        // Receive raw data
+        // Receive raw data from the previous stage
         if (xQueueReceive(raw_data_queue, &buffer, portMAX_DELAY) == pdTRUE)
         {
             // cycle count
