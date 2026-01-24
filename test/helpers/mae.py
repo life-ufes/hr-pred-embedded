@@ -23,12 +23,14 @@ def main(args):
 	plt.grid(True, which='both', linestyle='--', alpha=0.5)
 
 	plt.tight_layout()
-	plt.savefig("output/mae.png", dpi=300)
+	plt.savefig(f"{args.output}/{args.label}.png", dpi=300)
 
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser()
 	parser.add_argument("-f", "--file", type=str, required=True, help='Data file name')
+	parser.add_argument("-l", "--label", type=str, required=False, help='Label for the plot', default="mae")
+	parser.add_argument("-o", "--output", type=str, required=False, help='Output file name', default="selected_output")
 
 	args = parser.parse_args()
 	main(args=args)

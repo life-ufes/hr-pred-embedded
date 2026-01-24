@@ -21,8 +21,11 @@ class DataStreamer:
         self._load_and_prepare()
         self.on_data_ready = on_data_ready_callback
 
+
     def _load_and_prepare(self):        
-        desired_cols = ["acc_x", "acc_y", "acc_z", "timestamp", "hr", "timestamp_hr"]
+        desired_cols = ["acc_x", "acc_y", "acc_z", "timestamp", "hr", "timestamp_hr", "train"]
+        # desired_cols = ["gyro_x", "gyro_y", "gyro_z", "timestamp", "hr", "timestamp_hr", "train"]
+
         df = pd.read_csv(self.csv_path, usecols=desired_cols)
 
         # sync timestamp
@@ -43,13 +46,31 @@ class DataStreamer:
             if len(chunk) < self.chunk_size:
                 print(f"[DataStreamer] Skipping final partial chunk ({len(chunk)} rows).")
                 break
+            
+            acc_x = chunk["acc_x"].values.tolist()
+            acc_y = chunk["acc_y"].values.tolist()
+            acc_z = chunk["acc_z"].values.tolist()
+            # acc_data = acc_x + acc_y + acc_z
+            
+            # gyro_x = chunk["gyro_x"].values.tolist()
+            # gyro_y = chunk["gyro_y"].values.tolist()
+            # gyro_z = chunk["gyro_z"].values.tolist()            
+            # acc_data = gyro_x + gyro_y + gyro_z
 
-            acc_data = chunk[["acc_x", "acc_y", "acc_z"]].values.flatten().tolist()
+            #===========================================================================
+            # DO NOT WORKS - BUG
+            # acc_data = chunk[["acc_x", "acc_y", "acc_z"]].values.flatten().tolist()
+            # acc_data = chunk[["gyro_x", "gyro_y", "gyro_z"]].values.flatten().tolist()
+            #===========================================================================
 
-            hr_value = float(chunk["hr"].iloc[-1])
-            acc_data.append(hr_value)
+            hr_value = chunk["hr"].iloc[-1]
+            # acc_data.append(hr_value)
 
-            yield acc_data
+            train_flag = chunk["train"].iloc[-1]
+            # acc_data.append(train_flag)
+
+            packet_data = acc_x + acc_y + acc_z + [hr_value, train_flag]
+            yield packet_data
 
 
     def start(self):

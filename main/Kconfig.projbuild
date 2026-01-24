@@ -1,0 +1,33 @@
+menu "ML Model Configuration"
+
+    choice ML_MODEL_SELECTION
+        prompt "Select ML Model to run"
+        default EXPONENTIAL_APPROXIMATION_MODEL
+        help
+            Choose which model will be compiled and executed.
+
+        config EXPONENTIAL_APPROXIMATION_MODEL
+            bool "Exponential Approximation Model"
+            help
+                Uses the default exponential model.
+
+        config DYNAMIC_EXPONENTIAL_MODEL
+            bool "Dynamic Exponential Model"
+            help
+                Uses the dual-tau exponential model.
+    endchoice
+
+    choice SENSOR_TYPE
+        prompt "Sensor Source"
+        default SENSOR_ACC
+        help
+            Choose which sensor data will be used (Accelerometer or Gyroscope).
+
+        config SENSOR_ACC
+            bool "Accelerometer (Acc)"
+        
+        config SENSOR_GYRO
+            bool "Gyroscope (Gyro)"
+    endchoice   
+
+endmenu

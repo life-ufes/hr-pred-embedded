@@ -2,20 +2,7 @@
 #include <stdio.h>
 #include "esp_dsp.h"
 #include "exp_approx_model.h"
-
-#define INITIAL_WEIGHT_1 93.75f
-#define INITIAL_WEIGHT_2 0.82f
-#define INITIAL_WEIGHT_3 -0.90f
-#define INITIAL_WEIGHT_4 -6.44f
-#define INITIAL_WEIGHT_5 -0.09f
-
-#define TAU 56.25f
-#define B_HIGH 60.0f
-#define B_LOW 40.0f
-#define L_RATE 0.0092f
-
-#define INTENSITY_TRESHOLD 1.0f
-
+#include "eam_weights.h"
 
 // ----------------------------
 void ea_model_init(eam_t *model)
@@ -44,19 +31,32 @@ void ea_model_init(eam_t *model)
 
 
 // -------------------------------------------------------------------
-void ea_model_set_user_data(eam_t *model, float bmi, Genre g, int age)
+void ea_model_set_user_data(eam_t *model, float bmi, int age, float male, float female)
 {
     model->ds[1] = bmi;
     model->ds[2] = (float)age;
-    model->ds[3] = g == MALE ? 1.0f : 0.0f;
-    model->ds[4] = g == FEMALE ? 1.0f : 0.0f;
+    model->ds[3] = male;
+    model->ds[4] = female;
 }
 
 
 // ----------------------------------------
-void ea_model_handle_intensity(eam_t *model)
+void ea_model_handle_intensity(eam_t *model, float al_raw)
 {
-    model->intensity = model->ds[0] >= INTENSITY_TRESHOLD ? HIGH : LOW;
+    static int debounce_counter = 0;
+    
+    intensity_eam_t detected_intensity = (al_raw >= INTENSITY_THRESHOLD) ? HIGH : LOW;
+
+    if (detected_intensity != model->intensity) {
+        debounce_counter++;
+
+        if (debounce_counter >= INTENSITY_DEBOUNCE_LIMIT) {
+            model->intensity = detected_intensity;
+            debounce_counter = 0; // Reseta para a próxima vez
+        }
+    } else {
+        debounce_counter = 0;
+    }
 }
 
 
@@ -125,11 +125,8 @@ void update_bias(eam_t *model, int deriv_signal)
 
 
 // -----------------------------------------------------------
-void ea_model_partial_fit(eam_t *model, float al, float hr_gt)
+void ea_model_partial_fit(eam_t *model, float hr_gt)
 {
-    model->ds[0] = al;
-    ea_model_handle_intensity(model);
-
     int derivative_signal = model->next_hr > hr_gt ? -1 : 1;
 
     // Do not change order
@@ -168,4 +165,11 @@ void ea_model_debug(eam_t *model, float hr_gt)
            model->hr_reg,
            model->next_hr,
            hr_gt);
+}
+
+
+// -----------------------------------------
+void ea_model_set_al(eam_t *model, float al)
+{
+    model->ds[0] = al;
 }

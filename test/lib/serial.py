@@ -55,16 +55,32 @@ class SerialProvider:
     # ---------------------------------------------------------------------
     def _reader_routine(self):
         print("[SerialRead] Thread running.")
+        # while not self.stop_event.is_set():
+        #     try:
+        #         data = self.serial.readline()
+        #         if data and self.callback:
+        #             self.callback(data)
+        #     except Exception as e:
+        #         print(f"Reader thread error: {e}")
+        #         break
+            
+        #     time.sleep(0.01)
         while not self.stop_event.is_set():
             try:
-                data = self.serial.readline()
-                if data and self.callback:
-                    self.callback(data)
+                # Verifica se há bytes esperando no buffer da serial
+                waiting = self.serial.in_waiting
+                if waiting > 0:
+                    # Lê exatamente o que estiver disponível agora
+                    data = self.serial.read(waiting)
+                    if data and self.callback:
+                        self.callback(data)
+                else:
+                    # Pequena pausa para não fritar a CPU se não houver dados
+                    time.sleep(0.01)
+
             except Exception as e:
                 print(f"Reader thread error: {e}")
                 break
-            
-            time.sleep(0.01)
     
     # ---------------------------------------------------------------------
     # WRITE THREAD
