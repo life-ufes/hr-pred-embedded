@@ -52,6 +52,7 @@ class EAModelMonitor:
         #     print(f"[RX - Params] {sample}\n")
         # self.metrics.add_sample(sample)
 
+        print("Serial RX")
         # ---------------------------------------------------
         """Callback chamado sempre que chegam bytes na UART"""
         self.raw_buffer.extend(data)
@@ -111,6 +112,8 @@ class EAModelMonitor:
     def _handle_valid_packet(self, pkt_type: int, payload: bytes):
         """Encaminha o pacote para o destino correto"""
         
+        print("Handle packet")
+
         if pkt_type == 0x01: # DATA (Telemetria)
             # Descompacta os 4 floats enviados pelo ESP32 (telemetry_t)
             # '<ffff' = Little Endian, 4 floats
@@ -123,10 +126,10 @@ class EAModelMonitor:
                     'hr': hr
                 }
                 
-                if self.debug:
-                    print(f"[RX - Data] HR: {hr:.2f} | AL: {al:.2f}")
                 
-                self.metrics.add_sample(sample)
+                print(f"[RX - Data] HR: {hr:.2f} | AL: {al:.2f}")
+                
+                # self.metrics.add_sample(sample)
                 
             except struct.error:
                 print("[RX] Erro ao descompactar floats de telemetria")

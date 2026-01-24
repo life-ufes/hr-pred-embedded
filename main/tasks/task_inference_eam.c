@@ -1,6 +1,7 @@
 #include "tasks.h"
 #include <stdbool.h>
 #include "exp_approx_model.h"
+#include "comm_protocol.h"
 
 // Just for tests
 #define BMI 22.7f
@@ -21,9 +22,14 @@ void task_inference_eam(void *params)
     int set_start_hr_train = 0;
     int set_start_hr_test = 0;
 
+    esp_cpu_cycle_count_t start_cycles, end_cycles, cycles_elapsed;
+    float elapsed_time;
+
     while (1)
     {
         xQueueReceive(filtered_data_queue, &bf, portMAX_DELAY);
+
+        start_cycles = esp_cpu_get_cycle_count();
 
         ea_model_set_al(&model, bf->al);
         ea_model_handle_intensity(&model, bf->al_raw);
@@ -57,6 +63,15 @@ void task_inference_eam(void *params)
         // TODO: Prints results by UART in next task
         // TODO: rename send and receive tasks
         // ea_model_debug(&model, bf->hr_gt);
+
+
+        end_cycles = esp_cpu_get_cycle_count();
+        cycles_elapsed = end_cycles - start_cycles;
+        elapsed_time = (float)cycles_elapsed / (float)CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ;
+
+        char log[64]; 
+        snprintf(log, sizeof(log), "[PRE-INFERENCE] Elapsed time: %.2fus", elapsed_time);
+        comm_send_packet(PKT_TYPE_LOG, (uint8_t *)log, strlen(log));
 
         xQueueSend(inference_result_queue, &bf, portMAX_DELAY);
     }

@@ -2,58 +2,84 @@
 #include "driver/uart.h"
 #include "esp_log.h"
 
-// Implementação da send_deadbeef_packet que fizemos...
-#define UART_NUM UART_NUM_0 // UART padrão para logs e dados
+#define UART_NUM UART_NUM_0
 
-void comm_send_packet(uint8_t type, const uint8_t *payload, uint16_t len)
-{
-    // 1. Cabeçalho Mágico (Sync Word)
-    const uint8_t header[] = {0xDE, 0xAD, 0xBE, 0xEF};
+static SemaphoreHandle_t uart_mutex = NULL;
+static QueueHandle_t uart_event_queue; // to rx task
 
-    // 2. Metadados
-    uint8_t len_low = len & 0xFF;
-    uint8_t len_high = (len >> 8) & 0xFF;
+void comm_init(void);
+void comm_send_packet(uint8_t type, const uint8_t *payload, uint16_t len);
+QueueHandle_t comm_get_uart_queue(void);
 
-    // 3. Cálculo do Checksum (XOR)
-    // Começamos o checksum com os metadados (tipo e tamanho)
-    uint8_t checksum = type ^ len_low ^ len_high;
-
-    // Acumulamos o payload no checksum
-    for (uint16_t i = 0; i < len; i++)
-    {
-        checksum ^= payload[i];
-    }
-
-    // 4. Transmissão sequencial
-    // Enviamos o header
-    uart_write_bytes(UART_NUM, (const char *)header, 4);
-
-    // Enviamos Tipo e Tamanho (3 bytes)
-    uart_write_bytes(UART_NUM, (const char *)&type, 1);
-    uart_write_bytes(UART_NUM, (const char *)&len_low, 1);
-    uart_write_bytes(UART_NUM, (const char *)&len_high, 1);
-
-    // Enviamos o Payload
-    uart_write_bytes(UART_NUM, (const char *)payload, len);
-
-    // Enviamos o Checksum (1 byte final)
-    uart_write_bytes(UART_NUM, (const char *)&checksum, 1);
-}
-
-// Handler para redirecionar o ESP_LOG
-static int comm_log_vprintf(const char *fmt, va_list l)
-{
-    char buf[128];
-    int len = vsnprintf(buf, sizeof(buf), fmt, l);
-    if (len > 0)
-    {
-        comm_send_packet(PKT_TYPE_LOG, (uint8_t *)buf, len);
-    }
-    return len;
-}
-
+/// @brief
+/// @param
 void comm_init(void)
 {
-    // Configura a UART se necessário ou apenas o log hook
-    esp_log_set_vprintf(comm_log_vprintf);
+    // UART TX Mutex
+    if (uart_mutex == NULL)
+    {
+        uart_mutex = xSemaphoreCreateMutex();
+    }
+
+    // UART
+    const int uart_port_num = UART_NUM_0;
+    uart_config_t uart_config = {
+        .baud_rate = 115200,
+        .data_bits = UART_DATA_8_BITS,
+        .parity = UART_PARITY_DISABLE,
+        .stop_bits = UART_STOP_BITS_1,
+        .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
+        .source_clk = UART_SCLK_DEFAULT};
+
+    // Driver install
+    ESP_ERROR_CHECK(uart_driver_install(uart_port_num, 1024, 1024, 5, &uart_event_queue, 0));
+    ESP_ERROR_CHECK(uart_param_config(uart_port_num, &uart_config));
+}
+
+/// @brief
+/// @param type
+/// @param payload
+/// @param len
+void comm_send_packet(uint8_t type, const uint8_t *payload, uint16_t len)
+{
+    if (uart_mutex == NULL)
+        return;
+
+    // Buffer temporário: 4(hdr) + 1(type) + 2(len) + len(payload) + 1(chk)
+    // Para telemetria (16 bytes) + overhead = 24 bytes. 256 é seguro.
+    uint8_t tx_buf[256];
+    if (len > (256 - 8))
+        return;
+
+    if (xSemaphoreTake(uart_mutex, pdMS_TO_TICKS(100)) == pdTRUE)
+    {
+        tx_buf[0] = 0xDE;
+        tx_buf[1] = 0xAD;
+        tx_buf[2] = 0xBE;
+        tx_buf[3] = 0xEF;
+        tx_buf[4] = type;
+        tx_buf[5] = len & 0xFF;
+        tx_buf[6] = (len >> 8) & 0xFF;
+
+        uint8_t checksum = tx_buf[4] ^ tx_buf[5] ^ tx_buf[6];
+        for (uint16_t i = 0; i < len; i++)
+        {
+            tx_buf[7 + i] = payload[i];
+            checksum ^= payload[i];
+        }
+        tx_buf[7 + len] = checksum;
+
+        // UMA única chamada garante que o pacote saia inteiro
+        uart_write_bytes(UART_NUM, (const char *)tx_buf, 7 + len + 1);
+
+        xSemaphoreGive(uart_mutex);
+    }
+}
+
+/// @brief
+/// @param
+/// @return
+QueueHandle_t comm_get_uart_queue(void)
+{
+    return uart_event_queue;
 }

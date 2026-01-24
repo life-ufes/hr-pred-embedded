@@ -13,11 +13,8 @@
 
 void app_main(void)
 {
-    init_uart();
+    // init_uart();
     comm_init();
-    
-    uart_mutex = xSemaphoreCreateMutex();
-
     init_pipeline();
     
     xTaskCreate(task_rx, "task_rx", 4096, NULL, 5, NULL);

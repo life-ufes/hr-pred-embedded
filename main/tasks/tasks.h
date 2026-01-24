@@ -20,8 +20,6 @@ extern QueueHandle_t raw_data_queue;
 extern QueueHandle_t filtered_data_queue;
 extern QueueHandle_t inference_result_queue;
 
-extern SemaphoreHandle_t uart_mutex;
-
 // Buffer structure
 typedef struct
 {

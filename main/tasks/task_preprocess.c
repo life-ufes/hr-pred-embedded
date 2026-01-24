@@ -1,6 +1,7 @@
 #include "tasks.h"
 #include "esp_dsp.h"
 #include "sigproc.h"
+#include "comm_protocol.h"
 
 // Using 3 coeffs only. The 4th is used to memory alignment.
 #define COEFFS_LEN 4
@@ -83,6 +84,11 @@ void task_preprocess(void *params)
         cycles_elapsed = end_cycles - start_cycles;
         elapsed_time = (float)cycles_elapsed / (float)CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ;
         // TODO: Send elapsed time to buffer
+        
+        // ESP_LOGI("PRE_PROCESS", "Elapsed time: %fus", elapsed_time);
+        char log[64]; 
+        snprintf(log, sizeof(log), "[PRE-PROCESS] Elapsed time: %.2fus", elapsed_time);
+        comm_send_packet(PKT_TYPE_LOG, (uint8_t *)log, strlen(log));
 
         // Send data to the next stage
         xQueueSend(filtered_data_queue, &buffer, portMAX_DELAY);
