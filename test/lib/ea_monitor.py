@@ -46,35 +46,25 @@ class EAModelMonitor:
         )
 
 
+    # ----------------------------------
     def _on_serial_rx(self, data: bytes):
-        # sample = ModelMetricsBuffer.parse_sample(data)        
-        # if self.debug:
-        #     print(f"[RX - Params] {sample}\n")
-        # self.metrics.add_sample(sample)
-
-        print("Serial RX")
-        # ---------------------------------------------------
-        """Callback chamado sempre que chegam bytes na UART"""
+        # print("Serial RX")
         self.raw_buffer.extend(data)
-        
-        # Tentamos processar o buffer enquanto houver dados suficientes para um cabeçalho (4 bytes deadbeef + 3 bytes meta)
+ 
         while len(self.raw_buffer) >= 7:
-            # 1. Sincronização: Procura o marcador 0xDEADBEEF
             header_index = self.raw_buffer.find(b'\xDE\xAD\xBE\xEF')
             
             if header_index == -1:
-                # Se não achou o marcador, limpa o buffer deixando apenas os últimos 3 bytes 
-                # (caso o 0xDE esteja no final do buffer)
+                # If no header found, discard all but last 3 bytes (in case header is split)
                 del self.raw_buffer[:-3]
                 break
             
-            # Se achou o marcador mas não no início, descarta o que veio antes
+            # If header is not at the start, discard preceding bytes
             if header_index > 0:
                 del self.raw_buffer[:header_index]
                 continue
 
-            # 2. Verificação de Metadados (Tipo + Tamanho)
-            # Se temos o header mas não temos os metadados completos (header + 3 bytes), aguardamos mais dados
+            # Metadata check
             if len(self.raw_buffer) < 7:
                 break
                 
@@ -83,17 +73,17 @@ class EAModelMonitor:
             len_high = self.raw_buffer[6]
             payload_len = len_low | (len_high << 8)
             
-            # 3. Verificação do Pacote Completo (Meta + Payload + Checksum)
+            # Complete packet check (Meta + Payload + Checksum)
             total_packet_len = 7 + payload_len + 1
             if len(self.raw_buffer) < total_packet_len:
-                break # Aguarda chegar o resto do payload
+                break # Wait for the rest of the payload
             
-            # Extrai o pacote completo para processamento
+            # Extract the complete packet for processing
             packet = self.raw_buffer[:total_packet_len]
             payload = packet[7:-1]
             received_checksum = packet[-1]
             
-            # 4. Validação do Checksum XOR
+            # 4. Checksum Verification
             calc_checksum = pkt_type ^ len_low ^ len_high
             for b in payload:
                 calc_checksum ^= b
@@ -104,25 +94,27 @@ class EAModelMonitor:
                 if self.debug:
                     print(f"[RX] Erro de Checksum no pacote tipo {pkt_type}")
 
-            # Remove o pacote processado do buffer e continua procurando o próximo
+            # Remove the processed packet from the buffer and continue looking for the next one
             del self.raw_buffer[:total_packet_len]
 
 
     # -----------------------------------------------------------
-    def _handle_valid_packet(self, pkt_type: int, payload: bytes):
-        """Encaminha o pacote para o destino correto"""
-        
+    def _handle_valid_packet(self, pkt_type: int, payload: bytes):        
         # print("Handle packet")
 
-        if pkt_type == 0x01: # DATA (Telemetria)
+        if pkt_type == 0x01: # DATA (telemetry)
             try:
-                hr, hr_reg, hr_gt, al, al_raw = struct.unpack('<fffff', payload)    # 5 floats little endian
+                hr, hr_reg, hr_gt, al, al_raw, pp_time, pp_hwm, inf_time, inf_hwm = struct.unpack('<ffffffIfI', payload)    # little endian
                 sample = {
                     'hr': hr,
                     'hr_reg': hr_reg,
                     'hr_gt': hr_gt,
                     'al': al,
                     'al_raw': al_raw,
+                    'pre_process_time': pp_time,
+                    'pre_process_hwm': pp_hwm,
+                    'inference_time': inf_time,
+                    'inference_hwm': inf_hwm,
                 }
                 
                 print(f"[RX - Data] HR: {hr:.2f} | HR_REG: {hr_reg:.2f} | HR_GT: {hr_gt:.2f}\nAL: {al:.2f} | AL_RAW: {al_raw:.2f}")
@@ -134,7 +126,6 @@ class EAModelMonitor:
         elif pkt_type == 0x02: # LOG (Strings do ESP_LOG)
             try:
                 message = payload.decode('utf-8', errors='ignore').strip()
-                # Imprime com cor para diferenciar do resto do terminal
                 print(f"\033[96m[ESP32 LOG] {message}\033[0m")
             except Exception as e:
                 print(f"[RX] Erro ao decodificar string de log: {e}")
@@ -142,33 +133,22 @@ class EAModelMonitor:
 
     # ----------------------------------
     def _on_data_ready(self, data: list):
-        # if self.debug:
-        #     print(f"[TX - Ground Truth] {data[-1]} BPM\n")
-            
-        # payload = struct.pack("<77f", *data) 
-        # self.serial.send(payload)
-
         if self.debug:
             print(f"[TX - Ground Truth] {data[-1]} BPM\n")
             
-        # 1. Gera o payload binário (77 floats)
-        raw_payload = struct.pack("<77f", *data) 
-        
-        # 2. Envelopa no protocolo DEADBEEF (Tipo 0x01 para DATA)
-        secure_packet = self._wrap_deadbeef_packet(0x01, raw_payload)
-        
-        # 3. Envia para a queue da serial
+        raw_payload = struct.pack("<77f", *data)         
+        secure_packet = self._wrap_deadbeef_packet(0x01, raw_payload)        
         self.serial.send(secure_packet)
 
-        
+
+    #-----------------------------------------------------------------------
     def _wrap_deadbeef_packet(self, pkt_type: int, payload: bytes) -> bytes:
-        """Adiciona cabeçalho, metadados e checksum ao payload"""
         header = b'\xDE\xAD\xBE\xEF'
         length = len(payload)
         len_low = length & 0xFF
         len_high = (length >> 8) & 0xFF
         
-        # Inicia checksum com tipo e bytes de tamanho
+        # Initialize checksum with type and length bytes
         checksum = pkt_type ^ len_low ^ len_high
         for b in payload:
             checksum ^= b
@@ -176,6 +156,7 @@ class EAModelMonitor:
         return header + struct.pack("B BB", pkt_type, len_low, len_high) + payload + struct.pack("B", checksum)
 
 
+    # -------------
     def start(self):
         print("[START] System initialized!")
         self.serial.start()
@@ -185,6 +166,7 @@ class EAModelMonitor:
             self.plotter.start()
 
 
+    # -------------
     def stop(self):
         print("[STOP] User interruption!")
         

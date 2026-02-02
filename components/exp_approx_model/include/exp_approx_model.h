@@ -1,6 +1,7 @@
 #pragma once
 
 #define WEIGHTS_LEN 5
+#define WEIGHTS_LEN_ALIGNEMENT 8
 
 /// @brief Enum for exercise intensity levels
 typedef enum
@@ -12,8 +13,8 @@ typedef enum
 /// @brief Structure for the Exponential Approximation Model
 typedef struct exp_approx_model
 {
-    float ds[WEIGHTS_LEN];
-    float weights[WEIGHTS_LEN];
+    float ds[WEIGHTS_LEN_ALIGNEMENT];
+    float weights[WEIGHTS_LEN_ALIGNEMENT];
     float hr_reg;
     float next_hr;
     float tau;

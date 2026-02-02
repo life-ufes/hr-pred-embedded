@@ -29,7 +29,6 @@ void ea_model_init(eam_t *model)
     memcpy(model->ds, ds, WEIGHTS_LEN * sizeof(float));
 }
 
-
 // -------------------------------------------------------------------
 void ea_model_set_user_data(eam_t *model, float bmi, int age, float male, float female)
 {
@@ -39,58 +38,57 @@ void ea_model_set_user_data(eam_t *model, float bmi, int age, float male, float 
     model->ds[4] = female;
 }
 
-
 // ----------------------------------------
 void ea_model_handle_intensity(eam_t *model, float al_raw)
 {
     static int debounce_counter = 0;
-    
+
     intensity_eam_t detected_intensity = (al_raw >= INTENSITY_THRESHOLD) ? HIGH : LOW;
 
-    if (detected_intensity != model->intensity) {
+    if (detected_intensity != model->intensity)
+    {
         debounce_counter++;
 
-        if (debounce_counter >= INTENSITY_DEBOUNCE_LIMIT) {
+        if (debounce_counter >= INTENSITY_DEBOUNCE_LIMIT)
+        {
             model->intensity = detected_intensity;
-            debounce_counter = 0; // Reseta para a próxima vez
+            debounce_counter = 0; // Reset for the next step
         }
-    } else {
+    }
+    else
+    {
         debounce_counter = 0;
     }
 }
 
-
 // ------------------------------------------------
-void update_weights(eam_t *model, int deriv_signal)
+void update_weights(eam_t *restrict model, int deriv_signal)
 {
     float mul_factor = expf(-1.0f / model->tau);
-    float res_op1[WEIGHTS_LEN], res_op2[WEIGHTS_LEN], res_op3[WEIGHTS_LEN], res_final[WEIGHTS_LEN];
-
-    ESP_ERROR_CHECK(dsps_mulc_f32_ae32(model->ds, res_op1, WEIGHTS_LEN, mul_factor, 1, 1));
-    ESP_ERROR_CHECK(dsps_sub_f32_ae32(res_op1, model->ds, res_op2, WEIGHTS_LEN, 1, 1, 1));
-    ESP_ERROR_CHECK(dsps_mulc_f32_ae32(res_op2, res_op3, WEIGHTS_LEN, model->alpha, 1, 1));
+    float scalar_k = model->alpha * (mul_factor - 1.0f);
 
     if (deriv_signal >= 0)
     {
-        ESP_ERROR_CHECK(dsps_sub_f32_ae32(model->weights, res_op3, res_final, WEIGHTS_LEN, 1, 1, 1));
+        scalar_k = -scalar_k;
     }
-    else
+
+    for (int i = 0; i < WEIGHTS_LEN; i++)
     {
-        ESP_ERROR_CHECK(dsps_add_f32_ae32(model->weights, res_op3, res_final, WEIGHTS_LEN, 1, 1, 1));
+        model->weights[i] += model->ds[i] * scalar_k;
     }
-
-    memcpy(model->weights, res_final, WEIGHTS_LEN * sizeof(float));
 }
-
 
 // --------------------------------------------
 void update_tau(eam_t *model, int deriv_signal)
 {
     float dot_prod = 0;
-    ESP_ERROR_CHECK(dsps_dotprod_f32_aes3(model->ds, model->weights, &dot_prod, WEIGHTS_LEN));
+
+    dsps_dotprod_f32_aes3(model->ds, model->weights, &dot_prod, WEIGHTS_LEN);
 
     float error_term = dot_prod - model->next_hr;
-    float derivative_term = -expf(-1.0f / model->next_tau) / powf(model->next_tau, 2);
+    float tau_sq = model->next_tau * model->next_tau;
+
+    float derivative_term = -expf(-1.0f / model->next_tau) / tau_sq;
     float tau_update_term = (model->alpha * derivative_term * error_term);
 
     if (deriv_signal < 0)
@@ -100,16 +98,15 @@ void update_tau(eam_t *model, int deriv_signal)
 
     float next_tau_calc = model->next_tau - tau_update_term;
 
-    // Update state
     model->tau = model->next_tau;
     model->next_tau = next_tau_calc;
 }
 
-
 // ---------------------------------------------
 void update_bias(eam_t *model, int deriv_signal)
 {
-    float update_bias_term = (model->alpha * (expf(-1 / model->tau) - 1));
+    float update_bias_term = (model->alpha * (expf(-1.0f / model->tau) - 1.0f));
+
     if (deriv_signal < 0)
     {
         update_bias_term *= -1;
@@ -117,12 +114,13 @@ void update_bias(eam_t *model, int deriv_signal)
 
     if (model->intensity == HIGH)
     {
-        model->b_high = model->b_high - update_bias_term;
-        return;
+        model->b_high -= update_bias_term;
     }
-    model->b_low = model->b_low - update_bias_term;
+    else
+    {
+        model->b_low -= update_bias_term;
+    }
 }
-
 
 // -----------------------------------------------------------
 void ea_model_partial_fit(eam_t *model, float hr_gt)
@@ -135,38 +133,18 @@ void ea_model_partial_fit(eam_t *model, float hr_gt)
     update_bias(model, derivative_signal);
 }
 
-
 // --------------------------------
 void ea_model_predict(eam_t *model)
 {
     float dot_prod = 0;
-    ESP_ERROR_CHECK(dsps_dotprod_f32_aes3(model->ds, model->weights, &dot_prod, WEIGHTS_LEN));
-    
-    float bias = model->intensity == HIGH ? model->b_high : model->b_low;
+    dsps_dotprod_f32_aes3(model->ds, model->weights, &dot_prod, WEIGHTS_LEN);
+
+    float bias = (model->intensity == HIGH) ? model->b_high : model->b_low;
     model->hr_reg = dot_prod + bias;
 
-    model->next_hr = (model->hr_reg - ((model->hr_reg - model->next_hr) * expf(-1.0f / model->next_tau)));
+    float exp_val = expf(-1.0f / model->next_tau);
+    model->next_hr = model->hr_reg - (model->hr_reg - model->next_hr) * exp_val;
 }
-
-
-// -------------------------------------------
-void ea_model_debug(eam_t *model, float hr_gt)
-{
-    printf("%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",
-           model->weights[0],
-           model->weights[1],
-           model->weights[2],
-           model->weights[3],
-           model->weights[4],
-           model->b_high,
-           model->b_low,
-           model->ds[0], // AL
-           model->next_tau,
-           model->hr_reg,
-           model->next_hr,
-           hr_gt);
-}
-
 
 // -----------------------------------------
 void ea_model_set_al(eam_t *model, float al)

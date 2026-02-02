@@ -14,6 +14,10 @@ typedef struct
     float hr_gt;
     float al;
     float al_raw;
+    float pre_process_time;
+    unsigned int pre_process_hwm;
+    float inference_time;
+    unsigned int inference_hwm;
 } __attribute__((packed)) telemetry_t;
 
 /// @brief Initialize communication protocol

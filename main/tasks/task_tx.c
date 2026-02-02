@@ -17,6 +17,10 @@ void task_tx(void *params)
                 .hr_gt = bf->hr_gt,
                 .al = bf->al,
                 .al_raw = bf->al_raw,
+                .pre_process_time = bf->pre_process_time,
+                .pre_process_hwm = bf->pre_process_hwm,
+                .inference_time = bf->inference_time,
+                .inference_hwm = bf->inference_hwm,
             };
 
             // Send packet via communication protocol
