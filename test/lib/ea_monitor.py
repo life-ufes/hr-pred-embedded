@@ -104,13 +104,17 @@ class EAModelMonitor:
 
         if pkt_type == 0x01: # DATA (telemetry)
             try:
-                hr, hr_reg, hr_gt, al, al_raw = struct.unpack('<fffff', payload)    # 5 floats little endian
+                hr, hr_reg, hr_gt, al, al_raw, pp_time, pp_hwm, inf_time, inf_hwm = struct.unpack('<ffffffIfI', payload)    # little endian
                 sample = {
                     'hr': hr,
                     'hr_reg': hr_reg,
                     'hr_gt': hr_gt,
                     'al': al,
                     'al_raw': al_raw,
+                    'pre_process_time': pp_time,
+                    'pre_process_hwm': pp_hwm,
+                    'inference_time': inf_time,
+                    'inference_hwm': inf_hwm,
                 }
                 
                 print(f"[RX - Data] HR: {hr:.2f} | HR_REG: {hr_reg:.2f} | HR_GT: {hr_gt:.2f}\nAL: {al:.2f} | AL_RAW: {al_raw:.2f}")

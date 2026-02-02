@@ -10,6 +10,10 @@ class ModelMetricsBuffer:
         "hr_gt",
         "al",
         "al_raw",
+        "pre_process_time",
+        "pre_process_hwm",
+        "inference_time",
+        "inference_hwm",
     ]
 
 

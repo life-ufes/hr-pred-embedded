@@ -60,10 +60,10 @@ void task_inference_eam(void *params)
             end_cycles = esp_cpu_get_cycle_count();
             elapsed_time = (float)(end_cycles - start_cycles) / (float)CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ;
 
-            // LOGS
-            char log[64];
-            snprintf(log, sizeof(log), "[PRE-INFERENCE] Elapsed time: %.2fus", elapsed_time);
-            comm_send_packet(PKT_TYPE_LOG, (uint8_t *)log, strlen(log));
+            UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
+
+            bf->inference_time = elapsed_time;
+            bf->inference_hwm = uxHighWaterMark;
 
             // Sends to the next stage
             xQueueSend(inference_result_queue, &bf, portMAX_DELAY);

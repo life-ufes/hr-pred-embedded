@@ -38,7 +38,7 @@ void comm_send_packet(uint8_t type, const uint8_t *payload, uint16_t len)
         return;
 
     // Temp buffer: 4(hdr) + 1(type) + 2(len) + len(payload) + 1(chk)
-    uint8_t tx_buf[64];
+    uint8_t tx_buf[256];
     if (len > (256 - 8))
         return;
 

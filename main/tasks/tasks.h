@@ -33,6 +33,11 @@ typedef struct
     float hr;
     float hr_reg;
 
+    float pre_process_time;
+    unsigned int pre_process_hwm;
+    float inference_time;
+    unsigned int inference_hwm;
+
 } __attribute__((aligned(16))) buffer_t;
 
 // Buffer pool
