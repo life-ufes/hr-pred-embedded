@@ -29,6 +29,6 @@
 
 #define TAU 56.25f
 
-#define L_RATE 0.02f
+#define L_RATE 0.0075f
 #define INTENSITY_THRESHOLD 0.2f
 #define INTENSITY_DEBOUNCE_LIMIT 5
