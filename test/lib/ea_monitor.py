@@ -10,12 +10,21 @@ import os
 
 class EAModelMonitor:
     
-    def __init__(self, port: str, csv_path: str, output_path: str="./", baud_rate: int=115200, real_time: bool=False, debug: bool=False):
-        
+    def __init__(
+        self, 
+        port: str, 
+        csv_path: str, 
+        output_path: str="./", 
+        baud_rate: int=115200, 
+        real_time: bool=False, 
+        debug: bool=False,
+        label: str = ""
+    ):        
         self.timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         self.real_time_flag = real_time
         self.output = output_path
         self.debug = debug
+        self.label = label
         self.raw_buffer = bytearray()
 
 
@@ -172,4 +181,4 @@ class EAModelMonitor:
         
         self.serial.stop()
         self.data_streamer.stop()
-        self.metrics.to_csv(self.output)
+        self.metrics.to_csv(self.output, label=self.label)

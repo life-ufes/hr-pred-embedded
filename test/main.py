@@ -6,6 +6,7 @@ from lib.ea_monitor import EAModelMonitor
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--file', type=str, required=True, help='Data file name')
+    parser.add_argument('-l', '--label', type=str, required=False, help="Label for outputs")
     parser.add_argument("-d", "--debug", action="store_true", help="Activate detailed logs")
     parser.add_argument("-rt", "--realtime", action="store_true", help="Turns on real time chart")
     parser.add_argument('-p', '--port', type=str, required=True, help='The port of serial communication')
@@ -20,7 +21,8 @@ if __name__ == '__main__':
         csv_path=args.file, 
         output_path=args.output,
         real_time=args.realtime,
-        debug=args.debug
+        debug=args.debug,
+        label=args.label
     )
 
     monitor.start()

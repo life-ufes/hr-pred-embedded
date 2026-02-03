@@ -30,11 +30,13 @@ class ModelMetricsBuffer:
                 print(f"[WARN] Ignoring unknown metric: {key}")
 
 
-    def to_csv(self, path):
+    def to_csv(self, path, label: str = ""):
         os.makedirs(path, exist_ok=True)
         df = pd.DataFrame(self.buffer)
 
-        csv = f"{path}/session_{self.timestamp}.csv"
+        filename = f"session_{self.timestamp}" if not label else f"{label}_{self.timestamp}"
+
+        csv = f"{path}/{filename}.csv"
         df.to_csv(csv, index=False)
         
         print(f"[OK] saved CSV: {csv}")
