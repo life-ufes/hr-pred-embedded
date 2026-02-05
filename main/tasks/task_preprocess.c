@@ -20,15 +20,15 @@ void task_preprocess(void *params)
     // ewma_t al_raw_ctx = {.alpha = 0.0769, .last_value = 0.0f};
     // ewma_t al_norm_ctx = {.alpha = 0.0769, .last_value = 0.0f};
 
-    static __attribute__((aligned(16))) float acc_mag[WINDOW_LEN_ALIGNMENT];
+    float acc_mag[WINDOW_LEN];
 
     // FIR circuit buffers
-    static __attribute__((aligned(16))) float delay_line_x[COEFFS_LEN + 4];
-    static __attribute__((aligned(16))) float delay_line_y[COEFFS_LEN + 4];
-    static __attribute__((aligned(16))) float delay_line_z[COEFFS_LEN + 4];
+    float delay_line_x[COEFFS_LEN + 4];
+    float delay_line_y[COEFFS_LEN + 4];
+    float delay_line_z[COEFFS_LEN + 4];
 
     // Order 2 high-pass FIR coefficients
-    static __attribute__((aligned(16))) float fir_coeffs[COEFFS_LEN] = {-0.5f, 1.0f, -0.5f, 0.0f};
+    float fir_coeffs[COEFFS_LEN] = {-0.5f, 1.0f, -0.5f, 0.0f};
 
     // FIR init
     ESP_ERROR_CHECK(dsps_fir_init_f32(&fir_x, fir_coeffs, delay_line_x, COEFFS_LEN));
@@ -47,9 +47,9 @@ void task_preprocess(void *params)
             start_cycles = esp_cpu_get_cycle_count();
 
             // In-place filtering
-            dsps_fir_f32_aes3(&fir_x, buffer->acc[0], buffer->acc[0], WINDOW_LEN);
-            dsps_fir_f32_aes3(&fir_y, buffer->acc[1], buffer->acc[1], WINDOW_LEN);
-            dsps_fir_f32_aes3(&fir_z, buffer->acc[2], buffer->acc[2], WINDOW_LEN);
+            dsps_fir_f32_ansi(&fir_x, buffer->acc[0], buffer->acc[0], WINDOW_LEN);
+            dsps_fir_f32_ansi(&fir_y, buffer->acc[1], buffer->acc[1], WINDOW_LEN);
+            dsps_fir_f32_ansi(&fir_z, buffer->acc[2], buffer->acc[2], WINDOW_LEN);
 
             // Acc magnitude
             calc_accel_mag_vec(
