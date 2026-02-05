@@ -27,9 +27,15 @@ void task_preprocess(void *params)
 
     // FIR circuit buffers
     static __attribute__((aligned(16))) float delay_lines[RAW_SIGNAL_CHANNELS][COEFFS_LEN + 4];
+    float acc_mag[WINDOW_LEN];
+
+    // FIR circuit buffers
+    float delay_line_x[COEFFS_LEN + 4];
+    float delay_line_y[COEFFS_LEN + 4];
+    float delay_line_z[COEFFS_LEN + 4];
 
     // Order 2 high-pass FIR coefficients
-    static __attribute__((aligned(16))) float fir_coeffs[COEFFS_LEN] = {-0.5f, 1.0f, -0.5f, 0.0f};
+    float fir_coeffs[COEFFS_LEN] = {-0.5f, 1.0f, -0.5f, 0.0f};
 
     // FIR init
     for (int i = 0; i < RAW_SIGNAL_CHANNELS; i++)
@@ -54,6 +60,9 @@ void task_preprocess(void *params)
                 dsps_fir_f32_aes3(&fir[axis], buffer->acc[axis], buffer->acc[axis], WINDOW_LEN);
                 dsps_fir_f32_aes3(&fir[SENSOR_AXES + axis], buffer->gyro[axis], buffer->gyro[axis], WINDOW_LEN);
             }
+            dsps_fir_f32_ansi(&fir_x, buffer->acc[0], buffer->acc[0], WINDOW_LEN);
+            dsps_fir_f32_ansi(&fir_y, buffer->acc[1], buffer->acc[1], WINDOW_LEN);
+            dsps_fir_f32_ansi(&fir_z, buffer->acc[2], buffer->acc[2], WINDOW_LEN);
 
             // Acc magnitude
             calc_accel_mag_vec(

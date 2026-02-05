@@ -15,6 +15,7 @@
 #define SENSOR_AXES 3
 #define RAW_SIGNAL_CHANNELS (SENSOR_AXES * 2)
 #define SERIAL_SIGNAL_LEN (WINDOW_LEN * RAW_SIGNAL_CHANNELS)
+#define SERIAL_SIGNAL_LEN WINDOW_LEN * 3
 
 // Global queues
 extern QueueHandle_t buffer_pool_queue;
@@ -25,14 +26,15 @@ extern QueueHandle_t inference_result_queue;
 // Buffer structure
 typedef struct
 {
-    float hr_gt;  // 0 to 4 bytes
-    int train;    // 4 to 8 bytes
-    float al_raw; // 8 to 12 bytes
-    float al;     // 12 to 16 bytes
+    float hr_gt; 
+    int train;   
+    float al_raw;
+    float al;    
 
     // Aligned accelerometer and gyroscope data for DSP operations
     float acc[3][WINDOW_LEN_ALIGNMENT] __attribute__((aligned(16)));
     float gyro[3][WINDOW_LEN_ALIGNMENT] __attribute__((aligned(16)));
+    float acc[3][WINDOW_LEN];
     float hr;
     float hr_reg;
 
@@ -41,7 +43,7 @@ typedef struct
     float inference_time;
     unsigned int inference_hwm;
 
-} __attribute__((aligned(16))) buffer_t;
+} buffer_t;
 
 // Buffer pool
 extern buffer_t buffer_p[NUM_BUFFERS];
