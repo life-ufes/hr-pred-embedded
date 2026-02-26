@@ -23,14 +23,14 @@ class DataStreamer:
 
 
     def _load_and_prepare(self):        
-        desired_cols = ["acc_x", "acc_y", "acc_z", "timestamp", "hr", "timestamp_hr", "train"]
+        desired_cols = ["acc_x", "acc_y", "acc_z", "timestamp", "hr", "train"]
 
         df = pd.read_csv(self.csv_path, usecols=desired_cols)
 
         # sync timestamp
-        SHIFT_PERIODS = 17
-        df["timestamp_hr"] = df["timestamp_hr"].shift(SHIFT_PERIODS)
-        df = df.dropna()
+        # SHIFT_PERIODS = 17
+        # df["timestamp_hr"] = df["timestamp_hr"].shift(SHIFT_PERIODS)
+        # df = df.dropna()
 
         self.df = df.reset_index(drop=True)
 

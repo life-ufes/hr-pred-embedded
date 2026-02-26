@@ -20,6 +20,15 @@ typedef struct
     unsigned int inference_hwm;
 } __attribute__((packed)) telemetry_t;
 
+/// @brief RX payload structure
+typedef struct
+{
+    int16_t acc_raw[3][25]; // bytes 0 to 149 (150 total bytes)
+    uint16_t _padding;      // bytes 150 and 151
+    float hr_gt;            // 152 (152 % 4 == 0)
+    float train;            // byte 156
+} __attribute__((packed)) rx_payload_t;
+
 /// @brief Initialize communication protocol
 void comm_init();
 

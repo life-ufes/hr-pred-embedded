@@ -141,11 +141,32 @@ class EAModelMonitor:
 
 
     # ----------------------------------
+    # def _on_data_ready(self, data: list):
+    #     if self.debug:
+    #         print(f"[TX - Ground Truth] {data[-1]} BPM\n")
+            
+    #     raw_payload = struct.pack("<77f", *data)         
+    #     secure_packet = self._wrap_deadbeef_packet(0x01, raw_payload)        
+    #     self.serial.send(secure_packet)
+
+    #  Function to send raw accelerometer signal
     def _on_data_ready(self, data: list):
         if self.debug:
             print(f"[TX - Ground Truth] {data[-1]} BPM\n")
             
-        raw_payload = struct.pack("<77f", *data)         
+        acc_data = data[:75]
+        hr_gt = data[75] # Ground truth (BPM)
+        train = data[76] # Train flag
+
+        # Ensure int        
+        acc_data_int = [int(val) for val in acc_data]
+
+        # '<'   : Little-Endian
+        # '75h' : 75 short values (int16, 2 bytes each)
+        # '2x'  : 2 bytes for padding
+        # '2f'  : 2 float values (32 bits cada)
+        raw_payload = struct.pack("<75h2x2f", *acc_data_int, hr_gt, train)         
+        
         secure_packet = self._wrap_deadbeef_packet(0x01, raw_payload)        
         self.serial.send(secure_packet)
 

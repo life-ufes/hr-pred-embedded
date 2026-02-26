@@ -29,6 +29,7 @@ typedef struct
     float al;     // 12 to 16 bytes
 
     // Aligned accelerometer data for DSP operations (112 bytes per axis)
+    int16_t raw_acc[3][WINDOW_LEN_ALIGNMENT] __attribute__((aligned(16)));
     float acc[3][WINDOW_LEN_ALIGNMENT] __attribute__((aligned(16)));
     float hr;
     float hr_reg;
