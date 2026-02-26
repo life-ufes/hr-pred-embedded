@@ -12,6 +12,7 @@
 #define NUM_BUFFERS 4
 #define WINDOW_LEN 25
 #define WINDOW_LEN_ALIGNMENT 28
+#define WINDOW_LEN_ALIGNMENT_S16 32
 #define SERIAL_SIGNAL_LEN WINDOW_LEN * 3
 
 // Global queues
@@ -28,9 +29,9 @@ typedef struct
     float al_raw; // 8 to 12 bytes
     float al;     // 12 to 16 bytes
 
-    // Aligned accelerometer data for DSP operations (112 bytes per axis)
-    int16_t raw_acc[3][WINDOW_LEN_ALIGNMENT] __attribute__((aligned(16)));
+    int16_t raw_acc[3][WINDOW_LEN_ALIGNMENT_S16] __attribute__((aligned(16)));
     float acc[3][WINDOW_LEN_ALIGNMENT] __attribute__((aligned(16)));
+
     float hr;
     float hr_reg;
 
