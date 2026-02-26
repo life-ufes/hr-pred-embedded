@@ -32,7 +32,4 @@ At this point, the project is almost ready to run and you just have to build, fl
 ```
 Select flash method. In this project I'm using `UART`.
 
-```
-> ESP-IDF: Monitor Device
-```
-This command opens a Serial Monitor in the VSCode terminal. Use it only if UART0 is not being used for serial communication with another device.
+:construction:
