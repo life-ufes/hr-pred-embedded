@@ -15,6 +15,12 @@ The firmware architecture is highly modular and asynchronous, leveraging FreeRTO
 | `task_inference_eam` / `task_inference_dem` | Executes the selected ML model to predict Heart Rate |
 | `task_tx` | Transmits telemetry packets (predictions + metrics) back to the host |
 
+### Research Paper
+
+This project was developed as part of a **research project** and the resulting paper was published at **SEMISH** (*Seminário Integrado de Software e Hardware*), powered by **SBC** (*Sociedade Brasileira de Computação*). The paper covers the dataset, system architecture, model design, and experimental results.
+
+> 📄 **Paper:** *Link coming soon*
+
 ---
 
 ### Requirements
@@ -32,8 +38,8 @@ Before building, you can configure the firmware via `menuconfig` (`> ESP-IDF: SD
 #### ML Model Selection
 | Option | Description |
 |---|---|
-| `EXPONENTIAL_APPROXIMATION_MODEL` *(default)* | Builds with the EAM model (`task_inference_eam`). Lower stack usage (~1024 bytes). |
-| `DYNAMIC_EXPONENTIAL_MODEL` | Builds with the DEM model (`task_inference_dem`). Higher stack usage (~4096 bytes). |
+| `EXPONENTIAL_APPROXIMATION_MODEL` *(default)* | Builds with the EAM model (`task_inference_eam`). |
+| `DYNAMIC_EXPONENTIAL_MODEL` | Builds with the DEM model (`task_inference_dem`). |
 
 #### Sensor Source
 | Option | Description |
@@ -126,7 +132,6 @@ The `/test` directory contains a complete **host-side Python validation environm
 2. **Receive** and decode telemetry packets from the ESP32.
 3. **Store** all received metrics in a CSV output file.
 4. **Visualize** predictions in real time (optional).
-5. **Post-process** results with the analysis helpers.
 
 ### Setup
 
@@ -370,84 +375,6 @@ monitor.stop()    # Stops all threads and saves CSV output
 
 ---
 
-### Post-Session Analysis Helpers (`helpers/`)
-
-After a monitoring session, the output CSV can be analyzed with the standalone scripts in `test/helpers/`.
-
-#### `helpers/hr.py` — Comparative HR Plot
-
-Plots the three HR signals over time to visually assess model accuracy:
-- `hr_reg` (dashed blue) — regression component
-- `hr` / `predicted_values` (solid green) — model output
-- `hr_gt` / `ground_truth_values` (solid red) — reference
-
-Vertical dashed lines mark the train/test phase boundary at samples 60 and 480.
-
-```bash
-python test/helpers/hr.py \
-  --file output/subject_01_20260106_203813.csv \
-  --output results/ \
-  --label subject_01_hr_comparison
-# Saves: results/subject_01_hr_comparison.png
-```
-
-| Argument | Short | Required | Default | Description |
-|---|---|---|---|---|
-| `--file` | `-f` | ✅ Yes | — | Path to the output CSV from the monitoring session |
-| `--output` | `-o` | No | `selected_output` | Output directory for the plot |
-| `--label` | `-l` | No | `hr` | Output filename (without extension) |
-
-#### `helpers/mae.py` — Error Analysis Plot
-
-Computes and plots three error metrics over the session:
-- **Point-to-point absolute error** (dotted gray)
-- **Cumulative MAE** — overall mean absolute error up to each sample (solid blue)
-- **Moving MAE** (window=100) — recent error trend (solid red)
-
-```bash
-python test/helpers/mae.py \
-  --file output/subject_01_20260106_203813.csv \
-  --output results/ \
-  --label subject_01_mae
-# Saves: results/subject_01_mae.png
-```
-
-| Argument | Short | Required | Default | Description |
-|---|---|---|---|---|
-| `--file` | `-f` | ✅ Yes | — | Path to the output CSV from the monitoring session |
-| `--output` | `-o` | No | `selected_output` | Output directory for the plot |
-| `--label` | `-l` | No | `mae` | Output filename (without extension) |
-
-> **Required columns in input CSV:** `predicted_values`, `ground_truth_values`.
-
-#### `helpers/al.py` — Activity Level Plot
-
-Plots the `Al` column (normalized Activity Level) over time to inspect motion intensity transitions.
-
-```bash
-python test/helpers/al.py \
-  --file output/subject_01_20260106_203813.csv \
-  --output results/ \
-  --label subject_01_al
-# Saves: results/subject_01_al.png
-```
-
-| Argument | Short | Required | Default | Description |
-|---|---|---|---|---|
-| `--file` | `-f` | ✅ Yes | — | Path to the CSV containing the `Al` column |
-| `--output` | `-o` | No | `selected_output` | Output directory for the plot |
-| `--label` | `-l` | No | `AL` | Output filename (without extension) |
-
-#### `helpers/analysis.py` — Raw Descriptor Script
-
-A quick exploratory script that loads a raw session CSV and prints descriptive statistics (`describe()`) for the Activity Level columns (`AL_raw`, `AL_raw_norm`, `AL_raw_gyro`, `AL_raw_gyro_norm`). Edit the `PATH` and `PATH_2` variables at the top of the file to point to your data before running:
-
-```bash
-python test/helpers/analysis.py
-```
-
----
-
 ### Typical End-to-End Workflow
 
 ```
@@ -457,8 +384,4 @@ python test/helpers/analysis.py
        python test/main.py -f data/Subject_8.csv -p /dev/ttyUSB0 -b 115200 -o output/ -l subject_8 --realtime
 4. Press Ctrl+C (or close the plot window) to end the session
        → output/subject_8_<timestamp>.csv is saved automatically
-5. Analyze results:
-       python test/helpers/hr.py  -f output/subject_8_<timestamp>.csv -o results/ -l s8_hr
-       python test/helpers/mae.py -f output/subject_8_<timestamp>.csv -o results/ -l s8_mae
-       python test/helpers/al.py  -f output/subject_8_<timestamp>.csv -o results/ -l s8_al
 ```
