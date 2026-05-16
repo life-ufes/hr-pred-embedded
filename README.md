@@ -1,4 +1,4 @@
-# HR Predictor
+# Low-Cost Embedded HR Predictor with Hardware Acceleration via ESP-DSP
 
 ### Overview
 **HR Predictor** (`embedded-hr-estimator`) is an embedded systems project built on top of the ESP-IDF framework. It focuses on estimating and predicting Heart Rate through Edge AI (Machine Learning on the edge). Designed to run on microcontrollers such as the **ESP32-S3**, the system processes raw sensor data (from an Accelerometer or Gyroscope) and uses on-device predictive models — currently two variants:
