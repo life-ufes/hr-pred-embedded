@@ -27,7 +27,7 @@ class DataStreamer:
 
 
     def _load_and_prepare(self):        
-        desired_cols = ["acc_x", "acc_y", "acc_z", "timestamp", "hr", "timestamp_hr", "train"]
+        desired_cols = ["acc_x", "acc_y", "acc_z", "gyro_x", "gyro_y", "gyro_z", "timestamp", "hr", "timestamp_hr", "train"]
 
         df = pd.read_csv(self.csv_path, usecols=desired_cols)
 
