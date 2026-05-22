@@ -1,6 +1,10 @@
+import logging
 from datetime import datetime
 import pandas as pd
 import os
+
+
+logger = logging.getLogger(__name__)
 
 class ModelMetricsBuffer:
 
@@ -27,7 +31,7 @@ class ModelMetricsBuffer:
             if key in self.buffer:
                 self.buffer[key].append(value)
             else:
-                print(f"[WARN] Ignoring unknown metric: {key}")
+                logger.debug("[WARN] Ignoring unknown metric: %s", key)
 
 
     def to_csv(self, path, label: str = ""):
@@ -39,7 +43,7 @@ class ModelMetricsBuffer:
         csv = f"{path}/{filename}.csv"
         df.to_csv(csv, index=False)
         
-        print(f"[OK] saved CSV: {csv}")
+        logger.info("[OK] saved CSV: %s", csv)
 
 
     def reset(self):

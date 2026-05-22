@@ -1,7 +1,11 @@
 import time
+import logging
 import serial
 import threading
 from queue import Queue, Empty
+
+
+logger = logging.getLogger(__name__)
 
 
 class SerialProvider:
@@ -20,7 +24,7 @@ class SerialProvider:
         self.write_thread = None
 
     def start(self):
-        print("[Serial] Starting...")
+        logger.info("[Serial] Starting...")
         self.serial = serial.Serial(port=self.port, baudrate=self.baud_rate, timeout=1)
         self.stop_event.clear()
 
@@ -31,30 +35,31 @@ class SerialProvider:
         self.write_thread.start()
 
     def stop(self):
-        print("[Serial] Stopping...")
+        logger.info("[Serial] Stopping...")
         self.stop_event.set()
 
         if self.read_thread:
-            print("[SerialRead] Thread exit requested.")
+            logger.debug("[SerialRead] Thread exit requested.")
             self.read_thread.join()
         
         if self.write_thread:
-            print("[SerialWrite] Thread exit requested.")
+            logger.debug("[SerialWrite] Thread exit requested.")
             self.write_thread.join()
         
         if self.serial and self.serial.is_open:
             self.serial.close()
             
-        print("[Serial] Closed!")
+        logger.info("[Serial] Closed!")
 
     def send(self, data: bytes):
         self.write_queue.put(data)
+        # print(f"[Serial] Queued {len(data)} bytes for transmission.")
 
     # ---------------------------------------------------------------------
     # READ THREAD
     # ---------------------------------------------------------------------
     def _reader_routine(self):
-        print("[SerialRead] Thread running.")
+        logger.debug("[SerialRead] Thread running.")
 
         while not self.stop_event.is_set():
             try:
@@ -70,14 +75,14 @@ class SerialProvider:
                     time.sleep(0.01)
 
             except Exception as e:
-                print(f"Reader thread error: {e}")
+                logger.debug("Reader thread error: %s", e)
                 break
     
     # ---------------------------------------------------------------------
     # WRITE THREAD
     # ---------------------------------------------------------------------
     def _writer_routine(self):
-        print("[SerialWrite] Thread running.")
+        logger.debug("[SerialWrite] Thread running.")
         while not self.stop_event.is_set():
             try:
                 data = self.write_queue.get(timeout=0.1)
@@ -86,6 +91,7 @@ class SerialProvider:
 
             try:
                 self.serial.write(data)
+                logger.debug("[Serial] Sent %s bytes.", len(data))
             except Exception as e:
-                print(f"Writer thread error: {e}")
+                logger.debug("Writer thread error: %s", e)
                 break

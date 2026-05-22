@@ -1,8 +1,12 @@
 import time
 import struct
+import logging
 import threading
 import pandas as pd
 from .serial import SerialProvider
+
+
+logger = logging.getLogger(__name__)
 
 
 class DataStreamer:
@@ -43,7 +47,7 @@ class DataStreamer:
             chunk = self.df.iloc[start:end]
 
             if len(chunk) < self.chunk_size:
-                print(f"[DataStreamer] Skipping final partial chunk ({len(chunk)} rows).")
+                logger.debug("[DataStreamer] Skipping final partial chunk (%s rows).", len(chunk))
                 break
             
             acc_x = chunk["acc_x"].values.tolist()
@@ -58,7 +62,7 @@ class DataStreamer:
 
 
     def start(self):
-        print("[DataStreamer] Starting...")
+        logger.info("[DataStreamer] Starting...")
         self.stop_event.clear()
 
         self.thread = threading.Thread(target=self._run, daemon=True, name="DataStreamer")
@@ -66,25 +70,25 @@ class DataStreamer:
 
 
     def stop(self):
-        print("[DataStreamer] Stopping...")
+        logger.info("[DataStreamer] Stopping...")
         self.stop_event.set()
 
         if self.thread:
             self.thread.join()
-            print("[DataStreamer] Stopped.")
+            logger.info("[DataStreamer] Stopped.")
 
     # ---------------------------------------------------------
     # THREAD
     # ---------------------------------------------------------
     def _run(self):
-        print("[DataStreamer] Thread running. Beginning CSV streaming...")
+        logger.info("[DataStreamer] Thread running. Beginning CSV streaming...")
 
         for packet in self._chunk_generator():
             if self.stop_event.is_set():
-                print("[DataStreamer] Thread exit requested.")
+                logger.debug("[DataStreamer] Thread exit requested.")
                 break
 
             self.on_data_ready(packet)
             time.sleep(self.interval)
 
-        print("[DataStreamer] Finished sending CSV.")
+        logger.info("[DataStreamer] Finished sending CSV.")

@@ -1,9 +1,13 @@
+import logging
 from .store import ModelMetricsBuffer
 
 import os
 from datetime import datetime
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
+
+
+logger = logging.getLogger(__name__)
 
 
 class LivePlotter:
@@ -23,7 +27,7 @@ class LivePlotter:
 
 
     def start(self):
-        print("[LivePlotter] Starting...")
+        logger.info("[LivePlotter] Starting...")
 
         plt.style.use("ggplot")
         self.fig, self.ax = plt.subplots()
@@ -51,7 +55,7 @@ class LivePlotter:
         try:
             plt.show()
         except KeyboardInterrupt:
-            print("[LivePlotter] User interruption!")
+            logger.debug("[LivePlotter] User interruption!")
             self._on_close()            
 
 
@@ -73,7 +77,7 @@ class LivePlotter:
 
 
     def _on_close(self, event):
-        print("[LivePlotter] Window closed — saving figure...")
+        logger.debug("[LivePlotter] Window closed - saving figure...")
 
         self._save_figure()
         plt.close(self.fig)
@@ -88,4 +92,4 @@ class LivePlotter:
         os.makedirs(self.output, exist_ok=True)
         self.fig.savefig(filename, dpi=200)
 
-        print(f"[LivePlotter] Figure saved at: {filename}")
+        logger.info("[LivePlotter] Figure saved at: %s", filename)
