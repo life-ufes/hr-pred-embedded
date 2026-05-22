@@ -1,4 +1,6 @@
 import logging
+import threading
+import time
 from .store import ModelMetricsBuffer
 from .serial import SerialProvider
 from .plotter import LivePlotter
@@ -30,6 +32,10 @@ class EAModelMonitor:
         self.debug = debug
         self.label = label
         self.raw_buffer = bytearray()
+        self.stop_event = threading.Event()
+        self.last_serial_rx_time = None
+        self._serial_rx_lock = threading.Lock()
+        self._idle_watch_started = False
 
 
         self.metrics = ModelMetricsBuffer(
@@ -46,7 +52,8 @@ class EAModelMonitor:
 
         self.data_streamer = DataStreamer( 
             csv_path=csv_path, 
-            on_data_ready_callback=self._on_data_ready
+            on_data_ready_callback=self._on_data_ready,
+            on_finished_callback=self._on_stream_finished
         )
 
 
@@ -61,6 +68,9 @@ class EAModelMonitor:
 
     # ----------------------------------
     def _on_serial_rx(self, data: bytes):
+        with self._serial_rx_lock:
+            self.last_serial_rx_time = time.monotonic()
+
         self.raw_buffer.extend(data)
  
         while len(self.raw_buffer) >= 7:
@@ -151,6 +161,37 @@ class EAModelMonitor:
         self.serial.send(secure_packet)
 
 
+    def _on_stream_finished(self):
+        if self._idle_watch_started:
+            return
+
+        self._idle_watch_started = True
+        watcher = threading.Thread(
+            target=self._wait_for_serial_idle,
+            daemon=True,
+            name="SerialIdleWatcher"
+        )
+        watcher.start()
+
+
+    def _wait_for_serial_idle(self, idle_timeout_ms: int = 1000):
+        logger.info("[CSV] Finished sending. Waiting for serial packets to go idle for %sms...", idle_timeout_ms)
+        idle_timeout_s = idle_timeout_ms / 1000.0
+        last_activity = time.monotonic()
+
+        while not self.serial.stop_event.is_set():
+            with self._serial_rx_lock:
+                if self.last_serial_rx_time is not None and self.last_serial_rx_time > last_activity:
+                    last_activity = self.last_serial_rx_time
+
+            if time.monotonic() - last_activity >= idle_timeout_s:
+                logger.info("[CSV] No serial packets received for %sms. Stopping.", idle_timeout_ms)
+                self.stop()
+                return
+
+            time.sleep(0.05)
+
+
     #-----------------------------------------------------------------------
     def _wrap_deadbeef_packet(self, pkt_type: int, payload: bytes) -> bytes:
         header = b'\xDE\xAD\xBE\xEF'
@@ -169,6 +210,7 @@ class EAModelMonitor:
     # -------------
     def start(self):
         logger.info("[START] System initialized!")
+        self.stop_event.clear()
         self.serial.start()
         self.data_streamer.start()
         
@@ -179,6 +221,7 @@ class EAModelMonitor:
     # -------------
     def stop(self):
         logger.info("[STOP] System stopping!")
+        self.stop_event.set()
         
         self.serial.stop()
         self.data_streamer.stop()
