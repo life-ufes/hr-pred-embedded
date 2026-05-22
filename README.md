@@ -11,7 +11,7 @@ The firmware architecture is highly modular and asynchronous, leveraging FreeRTO
 | Task | Description |
 |---|---|
 | `task_rx` | Receives incoming data packets from the host over UART |
-| `task_preprocess` | Applies FIR high-pass filtering, computes accelerometer magnitude, and calculates Activity Level (AL) |
+| `task_preprocess` | Applies FIR high-pass filtering, computes accelerometer and gyroscope magnitudes, and calculates Activity Level (AL) |
 | `task_inference_eam` / `task_inference_dem` | Executes the selected ML model to predict Heart Rate |
 | `task_tx` | Transmits telemetry packets (predictions + metrics) back to the host |
 
@@ -97,10 +97,10 @@ The firmware and the host Python monitor communicate over **UART** using a custo
 
 #### Packet Type `0x01` — Sensor Data (Host → ESP32)
 
-Sent by the Python monitor to inject a window of accelerometer samples plus ground-truth HR. Payload is **77 floats** (little-endian):
+Sent by the Python monitor to inject a window of accelerometer and gyroscope samples plus ground-truth HR. Payload is **152 floats** (little-endian):
 
 ```
-[ acc_x[0..24] (25 floats) ] [ acc_y[0..24] (25 floats) ] [ acc_z[0..24] (25 floats) ] [ hr_gt (1 float) ] [ train_flag (1 float) ]
+[ acc_x[0..24] (25 floats) ] [ acc_y[0..24] (25 floats) ] [ acc_z[0..24] (25 floats) ] [ gyro_x[0..24] (25 floats) ] [ gyro_y[0..24] (25 floats) ] [ gyro_z[0..24] (25 floats) ] [ hr_gt (1 float) ] [ train_flag (1 float) ]
 ```
 
 #### Packet Type `0x01` — Telemetry (ESP32 → Host)
@@ -243,6 +243,9 @@ The dataset CSV must contain at minimum the following columns:
 | `acc_x` | float | Accelerometer X-axis sample |
 | `acc_y` | float | Accelerometer Y-axis sample |
 | `acc_z` | float | Accelerometer Z-axis sample |
+| `gyro_x` | float | Gyroscope X-axis sample |
+| `gyro_y` | float | Gyroscope Y-axis sample |
+| `gyro_z` | float | Gyroscope Z-axis sample |
 | `timestamp` | float | Sample timestamp |
 | `hr` | float | Ground-truth Heart Rate (BPM) |
 | `timestamp_hr` | float | Timestamp of the HR measurement |

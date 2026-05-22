@@ -9,7 +9,7 @@ void app_main(void)
     init_pipeline();
 
     xTaskCreate(task_rx, "task_rx", 4096, NULL, 5, NULL);
-    xTaskCreate(task_preprocess, "preprocess_task", 1024, NULL, 5, NULL);
+    xTaskCreate(task_preprocess, "preprocess_task", 6144, NULL, 5, NULL);
 
 #ifdef CONFIG_EXPONENTIAL_APPROXIMATION_MODEL
     xTaskCreate(task_inference_eam, "inference_task", 1024, NULL, 5, NULL);

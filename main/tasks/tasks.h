@@ -12,7 +12,9 @@
 #define NUM_BUFFERS 4
 #define WINDOW_LEN 25
 #define WINDOW_LEN_ALIGNMENT 28
-#define SERIAL_SIGNAL_LEN WINDOW_LEN * 3
+#define SENSOR_AXES 3
+#define RAW_SIGNAL_CHANNELS (SENSOR_AXES * 2)
+#define SERIAL_SIGNAL_LEN (WINDOW_LEN * RAW_SIGNAL_CHANNELS)
 
 // Global queues
 extern QueueHandle_t buffer_pool_queue;
@@ -28,8 +30,9 @@ typedef struct
     float al_raw; // 8 to 12 bytes
     float al;     // 12 to 16 bytes
 
-    // Aligned accelerometer data for DSP operations (112 bytes per axis)
+    // Aligned accelerometer and gyroscope data for DSP operations
     float acc[3][WINDOW_LEN_ALIGNMENT] __attribute__((aligned(16)));
+    float gyro[3][WINDOW_LEN_ALIGNMENT] __attribute__((aligned(16)));
     float hr;
     float hr_reg;
 

@@ -8,7 +8,7 @@ void task_rx(void *params)
     uint16_t p_len;
     
     // temporary buffer for received payload
-    static float rx_payload[SERIAL_SIGNAL_LEN + 2]; 
+    static float rx_payload[SERIAL_SIGNAL_LEN + 2];
 
     while (1)
     {
@@ -24,8 +24,9 @@ void task_rx(void *params)
                     buffer->hr_gt = rx_payload[SERIAL_SIGNAL_LEN];
                     buffer->train = rx_payload[SERIAL_SIGNAL_LEN + 1];
 
-                    for (int i = 0; i < 3; i++) {
-                        memcpy(buffer->acc[i], &rx_payload[i * 25], 25 * sizeof(float));
+                    for (int i = 0; i < SENSOR_AXES; i++) {
+                        memcpy(buffer->acc[i], &rx_payload[i * WINDOW_LEN], WINDOW_LEN * sizeof(float));
+                        memcpy(buffer->gyro[i], &rx_payload[(SENSOR_AXES + i) * WINDOW_LEN], WINDOW_LEN * sizeof(float));
                     }
 
                     // Send the filled buffer to the next stage

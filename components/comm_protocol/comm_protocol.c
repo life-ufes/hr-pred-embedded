@@ -27,7 +27,7 @@ void comm_init()
         .source_clk = UART_SCLK_DEFAULT};
 
     // Driver install
-    ESP_ERROR_CHECK(uart_driver_install(uart_port_num, 1024, 1024, 5, &uart_event_queue, 0));
+    ESP_ERROR_CHECK(uart_driver_install(uart_port_num, 4096, 4096, 10, &uart_event_queue, 0));
     ESP_ERROR_CHECK(uart_param_config(uart_port_num, &uart_config));
 }
 
@@ -82,13 +82,13 @@ esp_err_t comm_receive_packet(uint8_t *out_type, uint8_t *out_payload, uint16_t 
                 if (byte == 0xDE)
                 {
                     uint8_t head[3];
-                    if (uart_read_bytes(UART_NUM, head, 3, pdMS_TO_TICKS(20)) == 3)
+                    if (uart_read_bytes(UART_NUM, head, 3, pdMS_TO_TICKS(50)) == 3)
                     {
                         if (head[0] == 0xAD && head[1] == 0xBE && head[2] == 0xEF)
                         {
                             // packet metadata
                             uint8_t meta[3];
-                            if (uart_read_bytes(UART_NUM, meta, 3, pdMS_TO_TICKS(20)) == 3)
+                            if (uart_read_bytes(UART_NUM, meta, 3, pdMS_TO_TICKS(50)) == 3)
                             {
                                 *out_type = meta[0];
                                 *out_len = meta[1] | (meta[2] << 8);
@@ -97,10 +97,10 @@ esp_err_t comm_receive_packet(uint8_t *out_type, uint8_t *out_payload, uint16_t 
                                     return ESP_ERR_INVALID_SIZE;
 
                                 // Payload (wait up to 100ms)
-                                if (uart_read_bytes(UART_NUM, out_payload, *out_len, pdMS_TO_TICKS(100)) == *out_len)
+                                if (uart_read_bytes(UART_NUM, out_payload, *out_len, pdMS_TO_TICKS(200)) == *out_len)
                                 {
                                     uint8_t rx_chk;
-                                    uart_read_bytes(UART_NUM, &rx_chk, 1, pdMS_TO_TICKS(20));
+                                    uart_read_bytes(UART_NUM, &rx_chk, 1, pdMS_TO_TICKS(50));
 
                                     // Checksum XOR
                                     uint8_t calc_chk = meta[0] ^ meta[1] ^ meta[2];
