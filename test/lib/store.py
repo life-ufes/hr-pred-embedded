@@ -40,7 +40,7 @@ class ModelMetricsBuffer:
 
         filename = f"session_{self.timestamp}" if not label else f"{label}_{self.timestamp}"
 
-        csv = f"{path}/{filename}.csv"
+        csv = os.path.join(path, f"{filename}.csv")
         df.to_csv(csv, index=False)
         
         logger.info("[OK] saved CSV: %s", csv)

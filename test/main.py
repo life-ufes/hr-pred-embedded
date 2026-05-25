@@ -37,7 +37,7 @@ if __name__ == '__main__':
 
     try:
         if not monitor.real_time_flag:
-            while True:
+            while not monitor.stop_event.is_set():
                 time.sleep(1)
 
     except KeyboardInterrupt:

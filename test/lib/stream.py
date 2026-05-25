@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 class DataStreamer:
     
     # TODO: add desired cols
-    def __init__(self, csv_path: str, chunk_size: int=25, interval: float=0.1, on_data_ready_callback=None):
+    def __init__(self, csv_path: str, chunk_size: int=25, interval: float=0.1, on_data_ready_callback=None, on_finished_callback=None):
     
         self.chunk_size = chunk_size
         self.csv_path = csv_path
@@ -24,6 +24,7 @@ class DataStreamer:
         self.df = None
         self._load_and_prepare()
         self.on_data_ready = on_data_ready_callback
+        self.on_finished = on_finished_callback
 
 
     def _load_and_prepare(self):        
@@ -92,3 +93,5 @@ class DataStreamer:
             time.sleep(self.interval)
 
         logger.info("[DataStreamer] Finished sending CSV.")
+        if self.on_finished:
+            self.on_finished()
