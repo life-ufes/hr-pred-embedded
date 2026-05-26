@@ -83,7 +83,11 @@ void update_tau(eam_t *model, int deriv_signal)
 {
     float dot_prod = 0;
 
+#ifdef CONFIG_HARDWARE_ACCELERATION_ENABLED
+    dsps_dotprod_f32_aes3(model->ds, model->weights, &dot_prod, WEIGHTS_LEN);
+#else
     dsps_dotprod_f32_ansi(model->ds, model->weights, &dot_prod, WEIGHTS_LEN);
+#endif
 
     float error_term = dot_prod - model->next_hr;
     float tau_sq = model->next_tau * model->next_tau;
@@ -137,7 +141,12 @@ void ea_model_partial_fit(eam_t *model, float hr_gt)
 void ea_model_predict(eam_t *model)
 {
     float dot_prod = 0;
+
+#ifdef CONFIG_HARDWARE_ACCELERATION_ENABLED
+    dsps_dotprod_f32_aes3(model->ds, model->weights, &dot_prod, WEIGHTS_LEN);
+#else
     dsps_dotprod_f32_ansi(model->ds, model->weights, &dot_prod, WEIGHTS_LEN);
+#endif
 
     float bias = (model->intensity == HIGH) ? model->b_high : model->b_low;
     model->hr_reg = dot_prod + bias;

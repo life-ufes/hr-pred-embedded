@@ -17,6 +17,24 @@ menu "ML Model Configuration"
                 Uses the dual-tau exponential model.
     endchoice
 
+    choice HARDWARE_ACCELERATION
+        prompt "Hardware Acceleration"
+        default HARDWARE_ACCELERATION_NOT_SET
+        help
+            Choose whether hardware acceleration will be used.
+
+        config HARDWARE_ACCELERATION_ENABLED
+            bool "Enabled"
+        
+        config HARDWARE_ACCELERATION_DISABLED
+            bool "Disabled"
+
+        config HARDWARE_ACCELERATION_NOT_SET
+            bool "Not Set"
+            help
+                If neither enabled nor disabled is set. Gives a compilation error to force the user to make a #choice.
+    endchoice   
+
     choice SENSOR_TYPE
         prompt "Sensor Source"
         default SENSOR_ACC

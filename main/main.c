@@ -7,6 +7,12 @@ void app_main(void)
 {
     comm_init();
     init_pipeline();
+    
+    #ifdef CONFIG_HARDWARE_ACCELERATION_ENABLED
+        printf("Hardware acceleration enabled: Using optimized DSP functions.\n");
+    #else
+        printf("Hardware acceleration disabled: Using ANSI C implementations.\n");
+    #endif
 
     xTaskCreate(task_rx, "task_rx", 4096, NULL, 5, NULL);
     xTaskCreate(task_preprocess, "preprocess_task", 6144, NULL, 5, NULL);
